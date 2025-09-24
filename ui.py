@@ -8,7 +8,7 @@
 #   \ \ \_\ \  \ \ \  
 #    \ \_____\  \ \_\ 
 #     \/_____/   \/_/
-#   (version 14/09)
+#   (version 24/09)
 #   -> Manages the on-screen display
 
 import pygame
@@ -71,16 +71,18 @@ def draw_game_info(screen, scores, round_time, players, round_duration):
     screen.blit(prey_text, prey_rect)
 
     # --- Wac ---
+    load_animal_images()
     bar_width = 150
     bar_height = 15
     bar_spacing = 5
+    icon_size = 25
 
     for i, predator in enumerate(predators):
         if predator.is_active:
             wac_ratio = predator.Wac / predator.stats['WacMax'] if predator.stats.get('WacMax', 0) > 0 else 0
             wac_ratio = min(1.0, max(0.0, wac_ratio))
             
-            bar_y = pred_rect.bottom + bar_spacing + i * (bar_height + bar_spacing)
+            bar_y = pred_rect.bottom + bar_spacing + i * (bar_height + bar_spacing + (icon_size - bar_height) / 2)
             bar_x = pred_rect.right - bar_width
             
             pygame.draw.rect(screen, (40, 40, 40), (bar_x, bar_y, bar_width, bar_height))
@@ -88,18 +90,32 @@ def draw_game_info(screen, scores, round_time, players, round_duration):
             pygame.draw.rect(screen, predator.color, (bar_x, bar_y, remaining_wac_width, bar_height))
             pygame.draw.rect(screen, settings.WHITE, (bar_x, bar_y, bar_width, bar_height), 1)
 
+            animal_name = predator.animal['name']
+            if animal_name in ANIMAL_IMAGES:
+                img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['small'], (icon_size, icon_size))
+                img_rect = img.get_rect(centery=bar_y + bar_height / 2)
+                img_rect.right = bar_x - bar_spacing
+                screen.blit(img, img_rect)
+
     for i, prey in enumerate(preys):
         if prey.is_active:
             wac_ratio = prey.Wac / prey.stats['WacMax'] if prey.stats.get('WacMax', 0) > 0 else 0
             wac_ratio = min(1.0, max(0.0, wac_ratio))
 
-            bar_y = prey_rect.bottom + bar_spacing + i * (bar_height + bar_spacing)
+            bar_y = prey_rect.bottom + bar_spacing + i * (bar_height + bar_spacing + (icon_size - bar_height) / 2)
             bar_x = prey_rect.left
             
             pygame.draw.rect(screen, (40, 40, 40), (bar_x, bar_y, bar_width, bar_height))
             remaining_wac_width = bar_width * (1 - wac_ratio)
             pygame.draw.rect(screen, prey.color, (bar_x, bar_y, remaining_wac_width, bar_height))
             pygame.draw.rect(screen, settings.WHITE, (bar_x, bar_y, bar_width, bar_height), 1)
+
+            animal_name = prey.animal['name']
+            if animal_name in ANIMAL_IMAGES:
+                img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['small'], (icon_size, icon_size))
+                img_rect = img.get_rect(centery=bar_y + bar_height / 2)
+                img_rect.left = bar_x + bar_width + bar_spacing
+                screen.blit(img, img_rect)
 
 
 def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, focused_item_index=None, cursor_pos_index=None):

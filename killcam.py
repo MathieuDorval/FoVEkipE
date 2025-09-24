@@ -8,7 +8,7 @@
 #   \ \  _"-.  \ \ \  \ \ \____  \ \ \____  \ \ \____  \ \  __ \  \ \ \-./\ \  
 #    \ \_\ \_\  \ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \ \_\ 
 #     \/_/\/_/   \/_/   \/_____/   \/_____/   \/_____/   \/_/\/_/   \/_/  \/_/
-#   (version 14/09)
+#   (version 24/09)
 #   -> Manages the display of the killcam at the end of the round
 
 import pygame
@@ -56,14 +56,14 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
     Affiche la killcam.
     """
     if not round_winner_role or not game_data:
-        return
+        return {}
 
     round_key = f"round_{len(game_data['rounds'])}"
     round_data = game_data['rounds'][round_key]
     time_data = round_data.get('frame_data', {}).get('time', np.array([]))
     
     if time_data.size < 2:
-        return
+        return {}
 
     # VICTOIRE PREDATOR
     if round_winner_role == 'predator' and capture_events:
@@ -222,3 +222,28 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: pygame.quit(); return
+
+    final_positions = {}
+    last_frame_index = len(time_data) - 1
+    if last_frame_index >= 0:
+        for key, p_data in game_data['players'].items():
+            if not key.startswith('player_'): continue
+            player_id = int(key.split('_')[-1])
+            player_frame_data = round_data['frame_data'][key]
+            
+            is_captured = False
+            for event in capture_events:
+                if event['prey_id'] == player_id:
+                    capture_frame_index = _find_closest_index(time_data, event['time'])
+                    pos_x = player_frame_data['pos_x'][capture_frame_index]
+                    pos_y = player_frame_data['pos_y'][capture_frame_index]
+                    final_positions[player_id] = {'x': pos_x, 'y': pos_y}
+                    is_captured = True
+                    break
+            
+            if not is_captured:
+                pos_x = player_frame_data['pos_x'][last_frame_index]
+                pos_y = player_frame_data['pos_y'][last_frame_index]
+                final_positions[player_id] = {'x': pos_x, 'y': pos_y}
+
+    return final_positions

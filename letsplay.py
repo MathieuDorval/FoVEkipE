@@ -8,7 +8,7 @@
 #   \ \ \____  \ \  __\   \/_/\ \/ \ \___  \  \ \  _-/ \ \ \____  \ \  __ \  \ \____ \  
 #    \ \_____\  \ \_____\    \ \_\  \/\_____\  \ \_\    \ \_____\  \ \_\ \_\  \/\_____\ 
 #     \/_____/   \/_____/     \/_/   \/_____/   \/_/     \/_____/   \/_/\/_/   \/_____/
-#   (version 14/09)
+#   (version 24/09)
 #   -> Handles the main game loop
 
 import pygame
@@ -19,6 +19,7 @@ from ui import draw_game_info, draw_game_over_screen
 import numpy as np
 from killcam import play_killcam
 from ai import get_ai_inputs
+from transitions import play_start_transition, play_round_reset_transition
 
 def reset_players_positions(players, game_settings):
     """
@@ -76,12 +77,14 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     scores = {p.id: 0 for p in players}
     round_count = 0
     
+    reset_players_positions(players, game_settings)
+    play_start_transition(screen, clock, players, map_renderer, map_rotation_angle)
+
     game_over = False
     while not game_over:
         round_count += 1
         round_key = f"round_{round_count}"
         
-        reset_players_positions(players, game_settings)
         active_players = list(players)
         
         round_data = { 'frame_data': { 'time': [] } }
@@ -161,10 +164,26 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
             else: round_data['frame_data'][key] = np.array(value)
         game_data['rounds'][round_key] = round_data
         
-        play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, round_winner_role, capture_events, game_settings)
-
         if any(s >= game_settings.get('winning_score', 3) for s in scores.values()):
             game_over = True
+            play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, round_winner_role, capture_events, game_settings)
+        else:
+            reset_players_positions(players, game_settings)
+            
+            last_world_positions = play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, round_winner_role, capture_events, game_settings)
+
+            if last_world_positions:
+                last_screen_positions = {}
+                for pid, pos_data in last_world_positions.items():
+                    z = (map_renderer.get_z(pos_data['x'], pos_data['y']) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
+                    last_screen_positions[pid] = map_renderer._project_isometric(pos_data['x'], pos_data['y'], z, map_rotation_angle)
+
+                new_screen_positions = {}
+                for p in players:
+                    z = (map_renderer.get_z(p.x, p.y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
+                    new_screen_positions[p.id] = map_renderer._project_isometric(p.x, p.y, z, map_rotation_angle)
+
+                play_round_reset_transition(screen, clock, players, map_renderer, map_rotation_angle, last_screen_positions, new_screen_positions)
     
     draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings)
     
