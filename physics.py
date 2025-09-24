@@ -15,7 +15,7 @@ import pygame
 import settings
 import math
 
-def calculate_physics_update(player, direction_vector, intensity, dt, slope_angle):
+def calculate_physics_update(player, direction_vector, intensity, dt, slope_angle, game_settings):
     """
     Calcule la nouvelle vitesse et l'état du joueur.
     Basé sur le modèle FoVE.
@@ -30,13 +30,13 @@ def calculate_physics_update(player, direction_vector, intensity, dt, slope_angl
     k           = stats.get('k', 0)
     Ff          = stats.get('Ff', 0)
     g           = settings.GRAVITY
-    slopeOpt    = stats.get('slopeOpt', 0) if settings.SLOPE_CORRECTION else 100
+    slopeOpt    = stats.get('slopeOpt', 0) if game_settings.get('slope_correction', True) else 100
     F0i         = stats.get('F0i', 0)
     V0i         = stats.get('V0i', 1) 
     F0c         = stats.get('F0c', 0)
     V0c         = stats.get('V0c', 1) 
     WacMax      = stats.get('WacMax', 1)
-    Fbrake      = stats.get('Fbrake', 0) if settings.BRAKE_CORRECTION else 0
+    Fbrake      = stats.get('Fbrake', 0) if game_settings.get('brake_correction', True) else 0
 
     # --- Force de propulsion ---
     Fi = F0i * (1 - current_speed / V0i) if V0i > 0 else 0

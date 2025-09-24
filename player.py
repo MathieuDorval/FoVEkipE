@@ -96,7 +96,7 @@ class Player:
         slope = self.get_current_slope(surface_data, game_settings)
         self.slope = slope
 
-        new_velocity, new_wac, self.acceleration = calculate_physics_update(self, direction, intensity, dt, slope)
+        new_velocity, new_wac, self.acceleration = calculate_physics_update(self, direction, intensity, dt, slope, game_settings)
         
         self.velocity = new_velocity
         self.Wac = new_wac

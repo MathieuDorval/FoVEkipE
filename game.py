@@ -40,6 +40,8 @@ def main():
         'round_duration': settings.ROUND_DURATION,
         'winning_score': settings.WINNING_SCORE,
         'map_width': settings.MAP_WIDTH_METERS,
+        'slope_correction': settings.SLOPE_CORRECTION,
+        'brake_correction': settings.BRAKE_CORRECTION,
     }
     for i in range(1, 5):
         game_settings[f'p{i}_role'] = 'predator' if i == settings.PREDATOR_PLAYER else 'prey'

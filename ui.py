@@ -8,7 +8,7 @@
 #   \ \ \_\ \  \ \ \  
 #    \ \_____\  \ \_\ 
 #     \/_____/   \/_/
-#   (version 24/09)
+#   (version 14/09)
 #   -> Manages the on-screen display
 
 import pygame
@@ -39,6 +39,7 @@ def load_animal_images():
             ANIMAL_IMAGES[animal['name']] = {'large': large_placeholder, 'small': small_placeholder}
 
 def draw_game_info(screen, scores, round_time, players, round_duration):
+    load_animal_images()
     font_score = pygame.font.Font(None, 42)
     font_timer = pygame.font.Font(None, 50)
     
@@ -70,52 +71,58 @@ def draw_game_info(screen, scores, round_time, players, round_duration):
     screen.blit(pred_text, pred_rect)
     screen.blit(prey_text, prey_rect)
 
-    # --- Wac ---
-    load_animal_images()
+    # --- Wac & Player Images ---
     bar_width = 150
     bar_height = 15
     bar_spacing = 5
-    icon_size = 25
+    img_size = 40
+    img_padding = 10
 
-    for i, predator in enumerate(predators):
+    y_offset_pred = pred_rect.bottom + bar_spacing
+    for predator in predators:
         if predator.is_active:
+            # Animal Image
+            animal_name = predator.animal['name']
+            if animal_name in ANIMAL_IMAGES:
+                img = ANIMAL_IMAGES[animal_name]['small']
+                img_y_pos = y_offset_pred + (img_size - bar_height) / 2 - img_size / 2 # Centrer l'image verticalement
+                screen.blit(img, (pred_rect.right - bar_width - img_size - img_padding, img_y_pos))
+            
+            # WAC Bar
             wac_ratio = predator.Wac / predator.stats['WacMax'] if predator.stats.get('WacMax', 0) > 0 else 0
             wac_ratio = min(1.0, max(0.0, wac_ratio))
             
-            bar_y = pred_rect.bottom + bar_spacing + i * (bar_height + bar_spacing + (icon_size - bar_height) / 2)
+            bar_y = y_offset_pred
             bar_x = pred_rect.right - bar_width
             
             pygame.draw.rect(screen, (40, 40, 40), (bar_x, bar_y, bar_width, bar_height))
             remaining_wac_width = bar_width * (1 - wac_ratio)
             pygame.draw.rect(screen, predator.color, (bar_x, bar_y, remaining_wac_width, bar_height))
             pygame.draw.rect(screen, settings.WHITE, (bar_x, bar_y, bar_width, bar_height), 1)
+            y_offset_pred += img_size + bar_spacing
 
-            animal_name = predator.animal['name']
-            if animal_name in ANIMAL_IMAGES:
-                img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['small'], (icon_size, icon_size))
-                img_rect = img.get_rect(centery=bar_y + bar_height / 2)
-                img_rect.right = bar_x - bar_spacing
-                screen.blit(img, img_rect)
-
-    for i, prey in enumerate(preys):
+    y_offset_prey = prey_rect.bottom + bar_spacing
+    for prey in preys:
         if prey.is_active:
+            # Animal Image
+            animal_name = prey.animal['name']
+            if animal_name in ANIMAL_IMAGES:
+                img = ANIMAL_IMAGES[animal_name]['small']
+                img_y_pos = y_offset_prey + (img_size - bar_height) / 2 - img_size / 2 # Centrer l'image verticalement
+                screen.blit(img, (prey_rect.left + bar_width + img_padding, img_y_pos))
+
+            # WAC Bar
             wac_ratio = prey.Wac / prey.stats['WacMax'] if prey.stats.get('WacMax', 0) > 0 else 0
             wac_ratio = min(1.0, max(0.0, wac_ratio))
 
-            bar_y = prey_rect.bottom + bar_spacing + i * (bar_height + bar_spacing + (icon_size - bar_height) / 2)
+            bar_y = y_offset_prey
             bar_x = prey_rect.left
             
             pygame.draw.rect(screen, (40, 40, 40), (bar_x, bar_y, bar_width, bar_height))
             remaining_wac_width = bar_width * (1 - wac_ratio)
             pygame.draw.rect(screen, prey.color, (bar_x, bar_y, remaining_wac_width, bar_height))
             pygame.draw.rect(screen, settings.WHITE, (bar_x, bar_y, bar_width, bar_height), 1)
-
-            animal_name = prey.animal['name']
-            if animal_name in ANIMAL_IMAGES:
-                img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['small'], (icon_size, icon_size))
-                img_rect = img.get_rect(centery=bar_y + bar_height / 2)
-                img_rect.left = bar_x + bar_width + bar_spacing
-                screen.blit(img, img_rect)
+            y_offset_prey += img_size + bar_spacing
 
 
 def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, focused_item_index=None, cursor_pos_index=None):
@@ -282,7 +289,9 @@ def draw_settings_menu(screen, game_settings, selected_index, option_keys):
     options = {
         "Round Duration": f"{game_settings['round_duration']}s",
         "Winning Score": f"{game_settings['winning_score']}",
-        "Map Width": f"{game_settings['map_width']}m"
+        "Map Width": f"{game_settings['map_width']}m",
+        "Slope Correction": "On" if game_settings.get('slope_correction') else "Off",
+        "Brake Correction": "On" if game_settings.get('brake_correction') else "Off"
     }
     
     for i, key in enumerate(option_keys):

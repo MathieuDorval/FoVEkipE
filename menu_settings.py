@@ -23,7 +23,9 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
     options = {
         "Round Duration": "round_duration",
         "Winning Score": "winning_score",
-        "Map Width": "map_width"
+        "Map Width": "map_width",
+        "Slope Correction": "slope_correction",
+        "Brake Correction": "brake_correction"
     }
     option_keys = list(options.keys())
     selected_index = 0
@@ -56,6 +58,10 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
             elif key_to_change == "map_width":
                 new_value = current_value + nav_x
                 game_settings[key_to_change] = max(5, min(100, new_value))
+            elif key_to_change == "slope_correction":
+                game_settings[key_to_change] = not current_value
+            elif key_to_change == "brake_correction":
+                game_settings[key_to_change] = not current_value
 
         if menu_actions['open_settings'] and not last_select_button:
             running = False
