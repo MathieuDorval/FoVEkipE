@@ -33,91 +33,71 @@ def init_joysticks():
 
 def get_menu_inputs(gamepads):
     """
-    Gère les commandes pour le menu.
+    Gère les commandes pour le menu avec une navigation unifiée au joystick.
     """
     actions = {
-        'map_nav_y': 0,
-        'map_rotate_x': 0,
-        'open_settings': False,
-        'p1_animal_nav': 0,
-        'p2_animal_nav': 0,
-        'p3_animal_nav': 0,
-        'p4_animal_nav': 0,
-        'p1_toggle_status': False,
-        'p2_toggle_status': False,
-        'p3_toggle_status': False,
-        'p4_toggle_status': False,
-        'p1_toggle_role': False,
-        'p2_toggle_role': False,
-        'p3_toggle_role': False,
-        'p4_toggle_role': False,
-        'p1_confirm': 0.0,
-        'p2_confirm': 0.0,
-        'p3_confirm': 0.0,
-        'p4_confirm': 0.0,
+        'map_nav_y': 0, 'map_rotate_x': 0, 'open_settings': False,
+        'p1_nav_x': 0, 'p1_nav_y': 0, 'p1_confirm': False,
+        'p2_nav_x': 0, 'p2_nav_y': 0, 'p2_confirm': False,
+        'p3_nav_x': 0, 'p3_nav_y': 0, 'p3_confirm': False, 'p3_toggle_active': False,
+        'p4_nav_x': 0, 'p4_nav_y': 0, 'p4_confirm': False, 'p4_toggle_active': False,
     }
+
+    def get_axis(pad, index, deadzone=0.5):
+        val = pad.get_axis(index) if pad.get_numaxes() > index else 0.0
+        return 1 if val > deadzone else -1 if val < -deadzone else 0
+
+    def get_trigger_confirm(pad, index):
+        if pad.get_numaxes() > index:
+            return (pad.get_axis(index) + 1) / 2 > 0.5
+        return False
     
+    def get_button(pad, index):
+        return pad.get_button(index) if pad.get_numbuttons() > index else False
+
     keys = pygame.key.get_pressed()
     num_gamepads = len(gamepads)
-    
+
     if num_gamepads > 0 and gamepads[0].get_numhats() > 0:
         hat_x, hat_y = gamepads[0].get_hat(0)
-        actions['map_rotate_x']     = hat_x
-        actions['map_nav_y']        = hat_y
+        actions['map_rotate_x'] = hat_x
+        actions['map_nav_y'] = hat_y
     else:
-        actions['map_nav_y']        = keys[pygame.K_y] - keys[pygame.K_h]
-        actions['map_rotate_x']     = keys[pygame.K_j] - keys[pygame.K_g]
+        actions['map_nav_y'] = keys[pygame.K_y] - keys[pygame.K_h]
+        actions['map_rotate_x'] = keys[pygame.K_j] - keys[pygame.K_g]
 
-    if num_gamepads > 0 and gamepads[0].get_numbuttons() > 6:
-        actions['open_settings']    = gamepads[0].get_button(6)
+    if num_gamepads > 0:
+        actions['open_settings'] = get_button(gamepads[0], 6)
     else:
-        actions['open_settings']    = keys[pygame.K_BACKSPACE]
+        actions['open_settings'] = keys[pygame.K_BACKSPACE]
 
     if num_gamepads == 0:
-        actions['p1_animal_nav']    = keys[pygame.K_d] - keys[pygame.K_q]
-        actions['p1_toggle_status'] = keys[pygame.K_z]
-        actions['p1_toggle_role']   = keys[pygame.K_s]
-        actions['p1_confirm']       = 1.0 if keys[pygame.K_SPACE] else 0.0
-        
-        actions['p2_animal_nav']    = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
-        actions['p2_toggle_status'] = keys[pygame.K_UP]
-        actions['p2_toggle_role']   = keys[pygame.K_DOWN]
-        actions['p2_confirm']       = 1.0 if keys[pygame.K_RETURN] else 0.0
+        actions['p1_nav_x'] = keys[pygame.K_d] - keys[pygame.K_q]
+        actions['p1_nav_y'] = keys[pygame.K_s] - keys[pygame.K_z]
+        actions['p1_confirm'] = keys[pygame.K_SPACE]
+        actions['p2_nav_x'] = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+        actions['p2_nav_y'] = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+        actions['p2_confirm'] = keys[pygame.K_RETURN]
 
     elif num_gamepads == 1:
         g1 = gamepads[0]
-        axis_0 = g1.get_axis(0); actions['p1_animal_nav']       = 1 if axis_0 > 0.5 else -1 if axis_0 < -0.5 else 0
-        if g1.get_numbuttons() > 8: actions['p1_toggle_status'] = g1.get_button(8)
-        if g1.get_numbuttons() > 4: actions['p1_toggle_role']   = g1.get_button(4)
-        if g1.get_numaxes() > 4: actions['p1_confirm']          = (g1.get_axis(4) + 1) / 2
+        actions['p1_nav_x'] = get_axis(g1, 0)
+        actions['p1_nav_y'] = get_axis(g1, 1)
+        actions['p1_confirm'] = get_trigger_confirm(g1, 4)
+        actions['p2_nav_x'] = get_axis(g1, 2)
+        actions['p2_nav_y'] = get_axis(g1, 3)
+        actions['p2_confirm'] = get_trigger_confirm(g1, 5)
 
-        axis_2 = g1.get_axis(2); actions['p2_animal_nav']       = 1 if axis_2 > 0.5 else -1 if axis_2 < -0.5 else 0
-        if g1.get_numbuttons() > 9: actions['p2_toggle_status'] = g1.get_button(9)
-        if g1.get_numbuttons() > 5: actions['p2_toggle_role']   = g1.get_button(5)
-        if g1.get_numaxes() > 5: actions['p2_confirm']          = (g1.get_axis(5) + 1) / 2
-    
     elif num_gamepads >= 2:
         g1, g2 = gamepads[0], gamepads[1]
-        axis_0_g1 = g1.get_axis(0); actions['p1_animal_nav']    = 1 if axis_0_g1 > 0.5 else -1 if axis_0_g1 < -0.5 else 0
-        if g1.get_numbuttons() > 8: actions['p1_toggle_status'] = g1.get_button(8)
-        if g1.get_numbuttons() > 4: actions['p1_toggle_role']   = g1.get_button(4)
-        if g1.get_numaxes() > 4: actions['p1_confirm']          = (g1.get_axis(4) + 1) / 2
+        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)
+        actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4)
+        actions['p3_nav_x'] = get_axis(g1, 2); actions['p3_nav_y'] = get_axis(g1, 3); actions['p3_confirm'] = get_trigger_confirm(g1, 5)
+        actions['p4_nav_x'] = get_axis(g2, 2); actions['p4_nav_y'] = get_axis(g2, 3); actions['p4_confirm'] = get_trigger_confirm(g2, 5)
         
-        axis_2_g1 = g1.get_axis(2); actions['p3_animal_nav']    = 1 if axis_2_g1 > 0.5 else -1 if axis_2_g1 < -0.5 else 0
-        if g1.get_numbuttons() > 9: actions['p3_toggle_status'] = g1.get_button(9)
-        if g1.get_numbuttons() > 5: actions['p3_toggle_role']   = g1.get_button(5)
-        if g1.get_numaxes() > 5: actions['p3_confirm']          = (g1.get_axis(5) + 1) / 2
-
-        axis_0_g2 = g2.get_axis(0); actions['p2_animal_nav']    = 1 if axis_0_g2 > 0.5 else -1 if axis_0_g2 < -0.5 else 0
-        if g2.get_numbuttons() > 8: actions['p2_toggle_status'] = g2.get_button(8)
-        if g2.get_numbuttons() > 4: actions['p2_toggle_role']   = g2.get_button(4)
-        if g2.get_numaxes() > 4: actions['p2_confirm']          = (g2.get_axis(4) + 1) / 2
-
-        axis_2_g2 = g2.get_axis(2); actions['p4_animal_nav']    = 1 if axis_2_g2 > 0.5 else -1 if axis_2_g2 < -0.5 else 0
-        if g2.get_numbuttons() > 9: actions['p4_toggle_status'] = g2.get_button(9)
-        if g2.get_numbuttons() > 5: actions['p4_toggle_role']   = g2.get_button(5)
-        if g2.get_numaxes() > 5: actions['p4_confirm']          = (g2.get_axis(5) + 1) / 2
-
+        actions['p3_toggle_active'] = get_button(g1, 9)
+        actions['p4_toggle_active'] = get_button(g2, 9) 
+        
     return actions
 
 def get_player_action(player_id, gamepads, rotation_angle):
@@ -190,3 +170,4 @@ def get_confirm_action(gamepads):
         if keys[pygame.K_SPACE]:
             return True
     return False
+

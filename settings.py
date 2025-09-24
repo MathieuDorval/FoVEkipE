@@ -14,8 +14,8 @@
 import math
 
 # --- SCREEN ---
-SCREEN_WIDTH            = 1200
-SCREEN_HEIGHT           = 800
+SCREEN_WIDTH            = 1400
+SCREEN_HEIGHT           = 900
 FPS                     = 60    # update par seconde de la physique
 
 # --- COLOR ---
