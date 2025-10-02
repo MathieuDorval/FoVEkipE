@@ -15,23 +15,49 @@ import pygame
 import settings
 from ui import ANIMAL_IMAGES, load_animal_images
 
-def get_player_panel_rects(screen):
+def _get_menu_panel_rects(screen, game_settings):
     """
-    Calcule les positions des pannels joueurs, en miroir de ui.
+    Calcule les rectangles des panneaux de joueurs tels qu'ils sont affichés dans le menu.
+    Cette fonction reproduit la logique de positionnement de ui.py pour que l'animation
+    commence à la bonne position.
     """
     screen_w, screen_h = screen.get_size()
-    panel_width = screen_w * 0.20
-    panel_height = screen_h * 0.40
-    margin_x = screen_w * 0.05
-    margin_y = screen_h * 0.05
-    return [
-        pygame.Rect(margin_x, margin_y, panel_width, panel_height), # P1
-        pygame.Rect(screen_w - panel_width - margin_x, margin_y, panel_width, panel_height), # P2
-        pygame.Rect(margin_x, screen_h - panel_height - margin_y, panel_width, panel_height), # P3
-        pygame.Rect(screen_w - panel_width - margin_x, screen_h - panel_height - margin_y, panel_width, panel_height) # P4
-    ]
 
-def play_start_transition(screen, clock, players, map_renderer, map_rotation_angle):
+    # --- Constantes approximées de ui.py ---
+    # Ces valeurs sont basées sur le rendu des polices dans le menu pour trouver le point de départ en Y.
+    title_top_margin = 10
+    title_font_height = 74
+    title_bottom_margin = 15
+    role_title_font_height = 48
+    role_title_bottom_margin = 15
+    
+    start_y = (title_top_margin + title_font_height + title_bottom_margin + 
+               role_title_font_height + role_title_bottom_margin)
+
+    panel_width = screen_w * 0.45
+    panel_height = screen_h * 0.20
+    v_spacing = 5
+
+    pred_x = screen_w * 0.25 - panel_width / 2
+    prey_x = screen_w * 0.75 - panel_width / 2
+
+    rects = {}
+    for player_id in range(1, 5):
+        status = game_settings.get(f'p{player_id}_status', "INACTIVE")
+        if status == "INACTIVE":
+            continue
+        
+        y_pos = start_y + (player_id - 1) * (panel_height + v_spacing)
+        
+        role = game_settings.get(f'p{player_id}_role', 'prey')
+        x_pos = pred_x if role == 'predator' else prey_x
+        
+        rects[player_id] = pygame.Rect(x_pos, y_pos, panel_width, panel_height)
+        
+    return rects
+
+
+def play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, game_settings):
     """
     Joue l'animation de départ.
     """
@@ -39,32 +65,50 @@ def play_start_transition(screen, clock, players, map_renderer, map_rotation_ang
     duration = 3.0
     start_time = pygame.time.get_ticks()
 
-    panel_rects = get_player_panel_rects(screen)
+    panel_rects = _get_menu_panel_rects(screen, game_settings)
     player_animations = []
 
     for player in players:
-        panel_rect = panel_rects[player.id - 1]
-        section_player_height = panel_rect.height * 0.15
-        section_role_height = panel_rect.height * 0.15
-        char_preview_top = panel_rect.top + section_player_height + section_role_height
-        char_preview_height = panel_rect.height * 0.70 * (25 / 90)
-        start_pos_center_x = panel_rect.centerx
-        start_pos_center_y = char_preview_top + char_preview_height / 2
-        start_pos = pygame.Vector2(start_pos_center_x, start_pos_center_y)
+        panel_rect = panel_rects.get(player.id)
+        
+        start_pos = pygame.Vector2(0,0)
+        initial_size = 100 # Taille par défaut
+
+        if panel_rect:
+            # Le point de départ est le centre de la zone d'aperçu de l'animal dans le panneau du menu
+            top_rect_h = panel_rect.height * 0.25
+            bottom_rect_h = panel_rect.height * 0.75
+            bottom_rect_top = panel_rect.top + top_rect_h
+            preview_rect_w = panel_rect.width * 0.33
+            preview_rect_left = panel_rect.left
+
+            start_pos = pygame.Vector2(
+                preview_rect_left + preview_rect_w / 2,
+                bottom_rect_top + bottom_rect_h / 2
+            )
+
+            # Calcule la taille initiale de l'image pour qu'elle corresponde à celle du menu
+            preview_area_h = panel_rect.height * 0.75 * 0.7
+            preview_area_w = panel_rect.width * 0.33 * 0.9
+            initial_size = int(min(preview_area_w, preview_area_h))
+        else:
+            # Fallback si le panneau n'est pas trouvé (ne devrait pas arriver)
+            start_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
         player_z = (map_renderer.get_z(player.x, player.y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
         end_pos_tuple = map_renderer._project_isometric(player.x, player.y, player_z, map_rotation_angle)
         end_pos = pygame.Vector2(end_pos_tuple)
 
         animal_name = player.animal['name']
-        image = ANIMAL_IMAGES.get(animal_name, {}).get('large')
+        image = ANIMAL_IMAGES.get(animal_name, {}).get('source')
         if not image: continue
 
         player_animations.append({
             'player': player,
             'image': image,
             'start_pos': start_pos,
-            'end_pos': end_pos
+            'end_pos': end_pos,
+            'initial_size': initial_size
         })
 
     running = True
@@ -79,8 +123,7 @@ def play_start_transition(screen, clock, players, map_renderer, map_rotation_ang
         for anim in player_animations:
             current_pos = anim['start_pos'].lerp(anim['end_pos'], eased_progress)
 
-            initial_size = anim['image'].get_width()
-            current_size = int(initial_size * (1 - eased_progress))
+            current_size = int(anim['initial_size'] * (1 - eased_progress))
             
             if current_size > 1:
                 scaled_image = pygame.transform.scale(anim['image'], (current_size, current_size))
@@ -90,8 +133,8 @@ def play_start_transition(screen, clock, players, map_renderer, map_rotation_ang
                 screen.blit(scaled_image, img_rect)
 
             dot_alpha = int(255 * progress)
-            dot_surface = pygame.Surface((10, 10), pygame.SRCALPHA)
-            pygame.draw.circle(dot_surface, (*anim['player'].color, dot_alpha), (5, 5), settings.POINT_SCALE)
+            dot_surface = pygame.Surface((settings.POINT_SCALE * 2, settings.POINT_SCALE * 2), pygame.SRCALPHA)
+            pygame.draw.circle(dot_surface, (*anim['player'].color, dot_alpha), (settings.POINT_SCALE, settings.POINT_SCALE), settings.POINT_SCALE)
             dot_rect = dot_surface.get_rect(center=current_pos)
             screen.blit(dot_surface, dot_rect)
 

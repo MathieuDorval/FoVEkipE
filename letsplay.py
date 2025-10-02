@@ -78,7 +78,7 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     round_count = 0
     
     reset_players_positions(players, game_settings)
-    play_start_transition(screen, clock, players, map_renderer, map_rotation_angle)
+    play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, game_settings)
 
     game_over = False
     while not game_over:

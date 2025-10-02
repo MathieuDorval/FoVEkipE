@@ -40,6 +40,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
     selecting = True
     while selecting:
         dt = clock.tick(settings.FPS) / 1000.0
+        should_launch = False
 
         if role_error_timer > 0:
             role_error_timer -= dt
@@ -64,100 +65,97 @@ def menu_loop(screen, clock, gamepads, game_settings):
 
         # --- Handle Player-Specific Actions ---
         for i in range(1, 5):
-            # Status cycling (INACTIVE -> PLAYER -> AI)
+            # --- Status cycling (must be first to activate players) ---
             if menu_actions[f'p{i}_toggle_active'] and not last_inputs.get(f'p{i}_toggle_active', False):
                 current_status = game_settings[f'p{i}_status']
                 if current_status == "INACTIVE":
                     game_settings[f'p{i}_status'] = "PLAYER"
-                    player_focus[i] = 1 
                 elif current_status == "PLAYER" and game_settings['ai_enabled']:
                     game_settings[f'p{i}_status'] = "AI"
                 else:
                     game_settings[f'p{i}_status'] = "INACTIVE"
-                p_ready[i] = False # Reset ready state on change
+                p_ready[i] = False
 
-            if game_settings[f'p{i}_status'] == "INACTIVE": continue
+            # --- Skip remaining logic for inactive players ---
+            if game_settings[f'p{i}_status'] == "INACTIVE":
+                continue
 
             is_human = game_settings[f'p{i}_status'] == "PLAYER"
             is_new_confirm = menu_actions[f'p{i}_confirm'] and not last_inputs.get(f'p{i}_confirm', False)
             focus = player_focus.get(i, 1)
-            is_ready = p_ready.get(i, False)
 
-            if is_human and is_new_confirm:
-                if is_ready:
-                    p_ready[i] = False
-                elif focus == 1: 
-                    game_settings[f'p{i}_animal_index'] = player_cursors[i]
-                    game_settings[f'p{i}_animal_name'] = ANIMALS[player_cursors[i]]['name']
-                    player_focus[i] = 0 
-                elif focus == 0: 
-                    p_ready[i] = True
+            # --- Player is locked if ready ---
+            if is_human and p_ready.get(i, False):
+                if is_new_confirm: p_ready[i] = False # Un-ready
+                continue
+
+            # --- Navigation and Selection ---
+            nav_x, nav_y = menu_actions[f'p{i}_nav_x'], menu_actions[f'p{i}_nav_y']
+            last_nav_x, last_nav_y = last_inputs.get(f'p{i}_nav_x', 0), last_inputs.get(f'p{i}_nav_y', 0)
             
-            # Navigation for non-ready humans and all AIs
-            if not (is_ready and is_human):
-                nav_x = menu_actions[f'p{i}_nav_x']
-                nav_y = menu_actions[f'p{i}_nav_y']
-                last_nav_x = last_inputs.get(f'p{i}_nav_x', 0)
-                last_nav_y = last_inputs.get(f'p{i}_nav_y', 0)
-
-                if focus == 0: # Role selection
+            if focus == 0: # Top panel (role/status)
+                if nav_y > 0 and last_nav_y == 0: player_focus[i] = 1
+                if nav_x != 0 and last_nav_x == 0:
                     current_role = game_settings[f'p{i}_role']
-                    if nav_x > 0 and last_nav_x == 0 and current_role == 'predator':
-                        game_settings[f'p{i}_role'] = 'prey'
-                    elif nav_x < 0 and last_nav_x == 0 and current_role == 'prey':
-                        game_settings[f'p{i}_role'] = 'predator'
-                        
-                    if nav_y > 0 and last_nav_y == 0:
-                        player_focus[i] = 1 
-                
-                elif focus == 1: # Animal selection
+                    game_settings[f'p{i}_role'] = 'prey' if current_role == 'predator' else 'predator'
+
+            elif focus == 1: # Animal grid
+                if nav_y < 0 and last_nav_y == 0 and player_cursors[i] // 8 == 0: player_focus[i] = 0
+                else:
                     icons_per_row = 8
                     cursor = player_cursors[i]
-
                     if nav_y != 0 and last_nav_y == 0:
-                        if nav_y < 0: # Up
-                            if cursor // icons_per_row == 0: # If on the top row
-                                player_focus[i] = 0
-                            else:
-                                player_cursors[i] -= icons_per_row
-                        else: # Down
-                            new_cursor = cursor + icons_per_row
-                            if new_cursor < len(ANIMALS):
-                                player_cursors[i] = new_cursor
-                    
+                        new_cursor = cursor + (nav_y * icons_per_row)
+                        if 0 <= new_cursor < len(ANIMALS): player_cursors[i] = new_cursor
                     if nav_x != 0 and last_nav_x == 0:
                         row = cursor // icons_per_row
                         new_cursor = cursor + nav_x
-                        if 0 <= new_cursor < len(ANIMALS) and new_cursor // icons_per_row == row:
-                             player_cursors[i] = new_cursor
-                            
+                        if 0 <= new_cursor < len(ANIMALS) and new_cursor // icons_per_row == row: player_cursors[i] = new_cursor
+
+            # --- Handle Confirm Button ---
+            if is_new_confirm:
+                if is_human:
+                    if focus == 1: # Confirm animal
+                        game_settings[f'p{i}_animal_index'] = player_cursors[i]
+                        game_settings[f'p{i}_animal_name'] = ANIMALS[player_cursors[i]]['name']
+                        player_focus[i] = 0
+                    elif focus == 0: # Ready up
+                        p_ready[i] = True
+                else: # Is AI
+                    if focus == 1: # Confirm animal
+                        game_settings[f'p{i}_animal_index'] = player_cursors[i]
+                        game_settings[f'p{i}_animal_name'] = ANIMALS[player_cursors[i]]['name']
+                        player_focus[i] = 0
+                    elif focus == 0: # Try to launch game
+                        human_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] == "PLAYER"]
+                        current_active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
+                        if not human_players and current_active_players and i == min(current_active_players):
+                            should_launch = True
+
         last_inputs = menu_actions.copy()
         is_first_frame = False
 
         # --- Game Launch Logic ---
-        active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
-        should_launch = False
-        
-        if active_players:
-            human_players = [p for p in active_players if game_settings[f'p{p}_status'] == "PLAYER"]
-            
-            if human_players: # If there are human players
-                if all(p_ready.get(p, False) for p in human_players):
-                    should_launch = True
-            else: # If only AIs
-                first_active_ai_id = min(active_players)
-                if menu_actions[f'p{first_active_ai_id}_confirm'] and not last_inputs.get(f'p{first_active_ai_id}_confirm', False):
-                    should_launch = True
+        human_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] == "PLAYER"]
+        if human_players and all(p_ready.get(p, False) for p in human_players):
+            should_launch = True
 
         if should_launch:
-            roles = [game_settings[f'p{p}_role'] for p in active_players]
-            if len(active_players) < 2:
+            # Finalize all choices before launch
+            final_active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
+            for p_id in final_active_players:
+                # Ensure AI animal choices are saved if they didn't "confirm"
+                game_settings[f'p{p_id}_animal_index'] = player_cursors[p_id]
+                game_settings[f'p{p_id}_animal_name'] = ANIMALS[player_cursors[p_id]]['name']
+
+            roles = [game_settings[f'p{p}_role'] for p in final_active_players]
+            if len(final_active_players) < 2:
                 role_error_message = "Au moins 2 joueurs sont requis !"; role_error_timer = 3.0
-                p_ready = {p: False for p in range(1, 5)} # Un-ready everyone
-            elif roles.count('predator') == 0:
+                p_ready = {p: False for p in range(1, 5)}
+            elif 'predator' not in roles:
                 role_error_message = "Au moins un prédateur est requis !"; role_error_timer = 3.0
                 p_ready = {p: False for p in range(1, 5)}
-            elif roles.count('prey') == 0:
+            elif 'prey' not in roles:
                 role_error_message = "Au moins une proie est requise !"; role_error_timer = 3.0
                 p_ready = {p: False for p in range(1, 5)}
             else:

@@ -140,7 +140,6 @@ def main():
         map_renderer = MapRenderer(screen, screen.get_rect(), surface_data, game_settings)
         
         players = []
-        player_colors = [settings.COLOR_PLAYER1, settings.COLOR_PLAYER2, settings.COLOR_PLAYER3, settings.COLOR_PLAYER4]
         
         active_player_ids = [i for i in range(1, 5) if game_settings[f'p{i}_status'] != "INACTIVE"]
 
@@ -151,9 +150,11 @@ def main():
             role = game_settings[f'p{i}_role']
             is_ai = game_settings[f'p{i}_status'] == "AI"
             
+            color = settings.PLAYER_COLORS[player_id][role]
+            
             player = Player(
                 id=player_id,
-                color=player_colors[player_id - 1],
+                color=color,
                 animal_data=animal,
                 role=role,
                 is_ai=is_ai

@@ -126,47 +126,48 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
     font_large = pygame.font.Font(None, 32)
     font_small = pygame.font.Font(None, 24)
     
-    ready_color = (100, 255, 100)
-    highlight_color = (255, 255, 255, 40)
-    cursor_highlight_color = (255, 255, 255)
+    status = game_settings.get(f'p{player_id}_status', "INACTIVE")
+    role = game_settings.get(f'p{player_id}_role', 'prey')
+    player_colors = settings.PLAYER_COLORS[player_id]
+    border_color = player_colors[role]
     
-    player_colors = [settings.COLOR_PLAYER1, settings.COLOR_PLAYER2, settings.COLOR_PLAYER3, settings.COLOR_PLAYER4]
-    title_color = player_colors[player_id - 1]
+    bg_color = (*border_color, 100) # Teinte sombre de la couleur du joueur avec transparence
     
-    pygame.draw.rect(screen, (20, 20, 20), base_rect, border_radius=10)
-    pygame.draw.rect(screen, (80, 80, 80), base_rect, width=1, border_radius=10)
+    # Create a temporary surface for transparency
+    panel_surface = pygame.Surface(base_rect.size, pygame.SRCALPHA)
+    pygame.draw.rect(panel_surface, bg_color, panel_surface.get_rect(), border_radius=10)
+    screen.blit(panel_surface, base_rect.topleft)
+    pygame.draw.rect(screen, border_color, base_rect, width=2, border_radius=10)
+
 
     top_rect = pygame.Rect(base_rect.left, base_rect.top, base_rect.width, base_rect.height * 0.25)
     bottom_rect = pygame.Rect(base_rect.left, top_rect.bottom, base_rect.width, base_rect.height * 0.75)
     preview_rect = pygame.Rect(bottom_rect.left, bottom_rect.top, bottom_rect.width * 0.33, bottom_rect.height)
     grid_rect = pygame.Rect(preview_rect.right, bottom_rect.top, bottom_rect.width * 0.67, bottom_rect.height)
 
-    status = game_settings.get(f'p{player_id}_status', "INACTIVE")
     title_str = f"Player {player_id}"
     if status == "AI": title_str += " (AI)"
-    title_surf = font_large.render(title_str, True, title_color)
+    title_surf = font_large.render(title_str, True, settings.WHITE)
     title_pos = title_surf.get_rect(center=top_rect.center)
     screen.blit(title_surf, title_pos)
 
-    if not is_ready and focus_level == 0:
-        highlight_surf = pygame.Surface(top_rect.size, pygame.SRCALPHA); highlight_surf.fill(highlight_color)
-        screen.blit(highlight_surf, top_rect.topleft)
-
-    if not is_ready and focus_level == 1:
-        highlight_surf = pygame.Surface(bottom_rect.size, pygame.SRCALPHA); highlight_surf.fill(highlight_color)
-        screen.blit(highlight_surf, bottom_rect.topleft)
+    # --- Highlight focus area ---
+    is_human_player = status == "PLAYER"
+    if not (is_human_player and is_ready):
+        highlight_rect = top_rect if focus_level == 0 else bottom_rect
+        highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
+        highlight_surf.fill((255, 255, 255, 40))
+        screen.blit(highlight_surf, highlight_rect.topleft)
 
     confirmed_animal_idx = game_settings.get(f'p{player_id}_animal_index', 0)
-    preview_animal_idx = cursor_pos if focus_level == 1 and not is_ready else confirmed_animal_idx
+    preview_animal_idx = cursor_pos
     preview_animal = ANIMALS[preview_animal_idx]
     
-    # --- Redimensionnement dynamique de l'aperçu de l'animal ---
     if preview_animal['name'] in ANIMAL_IMAGES:
         image_area_h = preview_rect.height * 0.7
         preview_img_size = int(min(preview_rect.width * 0.9, image_area_h))
         
-        font_size = int(preview_rect.height * 0.15)
-        font_size = max(12, min(font_size, 30))
+        font_size = int(preview_rect.height * 0.15); font_size = max(12, min(font_size, 30))
         font_animal_name = pygame.font.Font(None, font_size)
 
         source_img = ANIMAL_IMAGES[preview_animal['name']]['source']
@@ -175,32 +176,26 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
         
         total_h = scaled_preview_img.get_height() + 5 + name_surf.get_height()
         start_y = preview_rect.centery - total_h / 2
-
         img_rect = scaled_preview_img.get_rect(centerx=preview_rect.centerx, top=start_y)
         screen.blit(scaled_preview_img, img_rect)
-        
         name_rect = name_surf.get_rect(centerx=preview_rect.centerx, top=img_rect.bottom + 5)
         screen.blit(name_surf, name_rect)
 
-    # --- Grille dynamique ---
+    # --- Animal Grid ---
     num_rows = 2
-    icons_per_row = math.ceil(len(ANIMALS) / num_rows) if len(ANIMALS) > 0 else 1
-        
+    icons_per_row = math.ceil(len(ANIMALS) / num_rows)
     cell_w = grid_rect.width / icons_per_row
     cell_h = grid_rect.height / num_rows
     icon_size = int(min(cell_w, cell_h) * 0.9)
 
     if icon_size > 0:
-        total_grid_w = icons_per_row * cell_w
-        total_grid_h = num_rows * cell_h
+        total_grid_w = icons_per_row * cell_w; total_grid_h = num_rows * cell_h
         grid_start_x = grid_rect.centerx - total_grid_w / 2
         grid_start_y = grid_rect.centery - total_grid_h / 2
 
         for i, animal in enumerate(ANIMALS):
             row, col = i // icons_per_row, i % icons_per_row
-            
-            cell_x = grid_start_x + col * cell_w
-            cell_y = grid_start_y + row * cell_h
+            cell_x, cell_y = grid_start_x + col * cell_w, grid_start_y + row * cell_h
             icon_rect = pygame.Rect(0, 0, icon_size, icon_size)
             icon_rect.center = (cell_x + cell_w / 2, cell_y + cell_h / 2)
             
@@ -209,19 +204,21 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
                 scaled_icon = pygame.transform.scale(source_icon, (icon_size, icon_size))
                 screen.blit(scaled_icon, icon_rect.topleft)
             
+            # Draw confirmed animal border for everyone
             if i == confirmed_animal_idx:
-                pygame.draw.rect(screen, title_color, icon_rect, 2)
+                pygame.draw.rect(screen, border_color, icon_rect, 2)
             
-            if not is_ready and focus_level == 1 and i == cursor_pos:
-                pygame.draw.rect(screen, cursor_highlight_color, icon_rect, 2)
+            # Draw cursor for players who are not locked in
+            if not (is_human_player and is_ready):
+                if focus_level == 1 and i == cursor_pos:
+                    pygame.draw.rect(screen, settings.WHITE, icon_rect, 2)
 
-
-    if is_ready:
+    if is_human_player and is_ready:
         overlay = pygame.Surface(base_rect.size, pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 120))
         screen.blit(overlay, base_rect.topleft)
         font_ready = pygame.font.Font(None, 60)
-        text_surf = font_ready.render("READY", True, ready_color)
+        text_surf = font_ready.render("READY", True, (100, 255, 100))
         text_rect = text_surf.get_rect(center=base_rect.center)
         screen.blit(text_surf, text_rect)
 

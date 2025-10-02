@@ -23,11 +23,13 @@ FPS                     = 60    # update par seconde de la physique
 BLACK                   = (0, 0, 0)
 WHITE                   = (255, 255, 255)
 SURFACE_COLOR           = (120, 100, 150)
-COLOR_PLAYER1           = (177, 102, 204)
-COLOR_PLAYER2           = (72, 107, 194)
-COLOR_PLAYER3           = (172, 184, 64)
-COLOR_PLAYER4           = (204, 123, 102)
-COLOR_PREDATOR          = (161, 29, 6)
+PLAYER_COLORS = {
+    1: {'predator': (231, 76, 60),  'prey': (155, 89, 182)}, # P1: Red vs Purple
+    2: {'predator': (241, 196, 15), 'prey': (52, 152, 219)},  # P2: Yellow vs Blue
+    3: {'predator': (230, 126, 34), 'prey': (46, 204, 113)},  # P3: Orange vs Green
+    4: {'predator': (192, 57, 43),  'prey': (26, 188, 156)}   # P4: Dark Red vs Teal
+}
+COLOR_PREDATOR          = (220, 40, 40)
 COLOR_PREY              = (47, 173, 72)
 
 # --- MAP ---
