@@ -25,7 +25,8 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         "Winning Score": "winning_score",
         "Map Width": "map_width",
         "Slope Correction": "slope_correction",
-        "Brake Correction": "brake_correction"
+        "Brake Correction": "brake_correction",
+        "AI": "ai_enabled"
     }
     option_keys = list(options.keys())
     selected_index = 0
@@ -47,7 +48,7 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         
         if nav_x != 0 and last_nav_x == 0:
             key_to_change = options[option_keys[selected_index]]
-            current_value = game_settings[key_to_change]
+            current_value = game_settings.get(key_to_change)
             
             if key_to_change == "round_duration":
                 new_value = current_value + nav_x * 5
@@ -62,6 +63,8 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
                 game_settings[key_to_change] = not current_value
             elif key_to_change == "brake_correction":
                 game_settings[key_to_change] = not current_value
+            elif key_to_change == "ai_enabled":
+                game_settings[key_to_change] = not current_value if current_value is not None else False
 
         if menu_actions['open_settings'] and not last_select_button:
             running = False
@@ -74,3 +77,4 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         draw_settings_menu(screen, game_settings, selected_index, option_keys)
         pygame.display.flip()
         clock.tick(settings.FPS)
+

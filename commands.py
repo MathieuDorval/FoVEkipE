@@ -37,8 +37,8 @@ def get_menu_inputs(gamepads):
     """
     actions = {
         'map_nav_y': 0, 'map_rotate_x': 0, 'open_settings': False,
-        'p1_nav_x': 0, 'p1_nav_y': 0, 'p1_confirm': False,
-        'p2_nav_x': 0, 'p2_nav_y': 0, 'p2_confirm': False,
+        'p1_nav_x': 0, 'p1_nav_y': 0, 'p1_confirm': False, 'p1_toggle_active': False,
+        'p2_nav_x': 0, 'p2_nav_y': 0, 'p2_confirm': False, 'p2_toggle_active': False,
         'p3_nav_x': 0, 'p3_nav_y': 0, 'p3_confirm': False, 'p3_toggle_active': False,
         'p4_nav_x': 0, 'p4_nav_y': 0, 'p4_confirm': False, 'p4_toggle_active': False,
     }
@@ -49,7 +49,10 @@ def get_menu_inputs(gamepads):
 
     def get_trigger_confirm(pad, index):
         if pad.get_numaxes() > index:
-            return (pad.get_axis(index) + 1) / 2 > 0.5
+            axis_val = pad.get_axis(index)
+            # Les gâchettes sur certains contrôleurs (ex: Xbox) vont de -1 (relâché) à 1 (pressé)
+            # D'autres de 0 à 1. On normalise.
+            return (axis_val + 1) / 2 > 0.5
         return False
     
     def get_button(pad, index):
@@ -58,6 +61,7 @@ def get_menu_inputs(gamepads):
     keys = pygame.key.get_pressed()
     num_gamepads = len(gamepads)
 
+    # --- Commandes générales du menu (map, settings) ---
     if num_gamepads > 0 and gamepads[0].get_numhats() > 0:
         hat_x, hat_y = gamepads[0].get_hat(0)
         actions['map_rotate_x'] = hat_x
@@ -67,10 +71,11 @@ def get_menu_inputs(gamepads):
         actions['map_rotate_x'] = keys[pygame.K_j] - keys[pygame.K_g]
 
     if num_gamepads > 0:
-        actions['open_settings'] = get_button(gamepads[0], 6)
+        actions['open_settings'] = get_button(gamepads[0], 6) # Bouton "Select" / "View"
     else:
         actions['open_settings'] = keys[pygame.K_BACKSPACE]
 
+    # --- Commandes des joueurs ---
     if num_gamepads == 0:
         actions['p1_nav_x'] = keys[pygame.K_d] - keys[pygame.K_q]
         actions['p1_nav_y'] = keys[pygame.K_s] - keys[pygame.K_z]
@@ -83,21 +88,41 @@ def get_menu_inputs(gamepads):
         g1 = gamepads[0]
         actions['p1_nav_x'] = get_axis(g1, 0)
         actions['p1_nav_y'] = get_axis(g1, 1)
-        actions['p1_confirm'] = get_trigger_confirm(g1, 4)
+        actions['p1_confirm'] = get_trigger_confirm(g1, 4) # LT
         actions['p2_nav_x'] = get_axis(g1, 2)
         actions['p2_nav_y'] = get_axis(g1, 3)
-        actions['p2_confirm'] = get_trigger_confirm(g1, 5)
+        actions['p2_confirm'] = get_trigger_confirm(g1, 5) # RT
 
-    elif num_gamepads >= 2:
+    elif num_gamepads == 2:
         g1, g2 = gamepads[0], gamepads[1]
         actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)
         actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4)
         actions['p3_nav_x'] = get_axis(g1, 2); actions['p3_nav_y'] = get_axis(g1, 3); actions['p3_confirm'] = get_trigger_confirm(g1, 5)
         actions['p4_nav_x'] = get_axis(g2, 2); actions['p4_nav_y'] = get_axis(g2, 3); actions['p4_confirm'] = get_trigger_confirm(g2, 5)
         
-        actions['p3_toggle_active'] = get_button(g1, 9)
-        actions['p4_toggle_active'] = get_button(g2, 9) 
+        actions['p3_toggle_active'] = get_button(g1, 9) # Click joystick droit M1
+        actions['p4_toggle_active'] = get_button(g2, 9) # Click joystick droit M2
+
+    elif num_gamepads == 3:
+        g1, g2, g3 = gamepads[0], gamepads[1], gamepads[2]
+        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4) # P1: M1 Gauche
+        actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4) # P2: M2 Gauche
+        actions['p3_nav_x'] = get_axis(g3, 0); actions['p3_nav_y'] = get_axis(g3, 1); actions['p3_confirm'] = get_trigger_confirm(g3, 4) # P3: M3 Gauche
+        actions['p4_nav_x'] = get_axis(g1, 2); actions['p4_nav_y'] = get_axis(g1, 3); actions['p4_confirm'] = get_trigger_confirm(g1, 5) # P4: M1 Droit
         
+        actions['p3_toggle_active'] = get_button(g3, 8)  # Click joystick gauche M3
+        actions['p4_toggle_active'] = get_button(g1, 9) # Click joystick droit M1
+
+    elif num_gamepads >= 4:
+        g1, g2, g3, g4 = gamepads[0], gamepads[1], gamepads[2], gamepads[3]
+        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4) # P1: M1 Gauche
+        actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4) # P2: M2 Gauche
+        actions['p3_nav_x'] = get_axis(g3, 0); actions['p3_nav_y'] = get_axis(g3, 1); actions['p3_confirm'] = get_trigger_confirm(g3, 4) # P3: M3 Gauche
+        actions['p4_nav_x'] = get_axis(g4, 0); actions['p4_nav_y'] = get_axis(g4, 1); actions['p4_confirm'] = get_trigger_confirm(g4, 4) # P4: M4 Gauche
+        
+        actions['p3_toggle_active'] = get_button(g3, 8) # Click joystick gauche M3
+        actions['p4_toggle_active'] = get_button(g4, 8) # Click joystick gauche M4
+
     return actions
 
 def get_player_action(player_id, gamepads, rotation_angle):
@@ -120,17 +145,40 @@ def get_player_action(player_id, gamepads, rotation_angle):
             vy += keys[pygame.K_DOWN] - keys[pygame.K_UP]
             vx += keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
             if keys[pygame.K_RETURN]: intensity = 1.0
-    else:
+            
+    elif num_gamepads == 1:
+        g1 = gamepads[0]
         if player_id == 1:
-            vx, vy, intensity = get_axis(gamepads[0], 0), get_axis(gamepads[0], 1), get_trigger(gamepads[0], 4)
+            vx, vy, intensity = get_axis(g1, 0), get_axis(g1, 1), get_trigger(g1, 4) # Stick gauche, LT
         elif player_id == 2:
-            g = gamepads[1] if num_gamepads > 1 else gamepads[0]
-            ax, ay, trig = (0, 1, 4) if num_gamepads > 1 else (2, 3, 5)
-            vx, vy, intensity = get_axis(g, ax), get_axis(g, ay), get_trigger(g, trig)
+            vx, vy, intensity = get_axis(g1, 2), get_axis(g1, 3), get_trigger(g1, 5) # Stick droit, RT
+
+    elif num_gamepads == 2:
+        g1, g2 = gamepads[0], gamepads[1]
+        if player_id == 1:
+            vx, vy, intensity = get_axis(g1, 0), get_axis(g1, 1), get_trigger(g1, 4) # P1: M1 Gauche
+        elif player_id == 2:
+            vx, vy, intensity = get_axis(g2, 0), get_axis(g2, 1), get_trigger(g2, 4) # P2: M2 Gauche
         elif player_id == 3:
-            vx, vy, intensity = get_axis(gamepads[0], 2), get_axis(gamepads[0], 3), get_trigger(gamepads[0], 5)
-        elif player_id == 4 and num_gamepads > 1:
-            vx, vy, intensity = get_axis(gamepads[1], 2), get_axis(gamepads[1], 3), get_trigger(gamepads[1], 5)
+            vx, vy, intensity = get_axis(g1, 2), get_axis(g1, 3), get_trigger(g1, 5) # P3: M1 Droit
+        elif player_id == 4:
+            vx, vy, intensity = get_axis(g2, 2), get_axis(g2, 3), get_trigger(g2, 5) # P4: M2 Droit
+            
+    elif num_gamepads == 3:
+        g1, g2, g3 = gamepads[0], gamepads[1], gamepads[2]
+        if player_id == 1:
+            vx, vy, intensity = get_axis(g1, 0), get_axis(g1, 1), get_trigger(g1, 4) # P1: M1 Gauche
+        elif player_id == 2:
+            vx, vy, intensity = get_axis(g2, 0), get_axis(g2, 1), get_trigger(g2, 4) # P2: M2 Gauche
+        elif player_id == 3:
+            vx, vy, intensity = get_axis(g3, 0), get_axis(g3, 1), get_trigger(g3, 4) # P3: M3 Gauche
+        elif player_id == 4:
+            vx, vy, intensity = get_axis(g1, 2), get_axis(g1, 3), get_trigger(g1, 5) # P4: M1 Droit
+
+    elif num_gamepads >= 4:
+        if player_id <= len(gamepads):
+            g = gamepads[player_id - 1]
+            vx, vy, intensity = get_axis(g, 0), get_axis(g, 1), get_trigger(g, 4) # Chaque joueur sur le stick gauche de sa manette
 
     if math.sqrt(vx**2 + vy**2) < settings.JOYSTICK_DEADZONE: vx, vy = 0, 0
     if vx == 0 and vy == 0: intensity = 0
@@ -161,12 +209,12 @@ def get_confirm_action(gamepads):
     """
     if gamepads:
         for gamepad in gamepads:
-            if gamepad.get_numaxes() > 4 and gamepad.get_axis(4) > 0.5:
+            if gamepad.get_numaxes() > 4 and (gamepad.get_axis(4) + 1) / 2 > 0.5: # LT
                  return True
-            if gamepad.get_numaxes() > 5 and gamepad.get_axis(5) > 0.5:
+            if gamepad.get_numaxes() > 5 and (gamepad.get_axis(5) + 1) / 2 > 0.5: # RT
                  return True
     else:
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE] or keys[pygame.K_RETURN]:
             return True
     return False

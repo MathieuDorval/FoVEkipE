@@ -28,39 +28,39 @@ dans la physique de base, lorque l'on était en descente, la gravité aidait à 
     -> donc au dela de 2* slopeOpt, par exemple -32%, g "aide" comme pour 2%, donc est délétaire.
     -> c'est la logique la plus proche de la réalité, car pareil, on est pas sur roulettes et on ne profite pas à fond de la gravité
 
-============= COMMANDES ============|       0 MANETTE (clavier)     |           1 MANETTE           |           2 MANETTES          |
--=-=-=-=-=-=-=- MENU -=-=-=-=-=-=-=-|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|
-Changer de Map                      |   'Y' et 'H' (haut / bas)     | haut/bas croix directionnelle | haut/bas croix d. (manette 1) |
-Rotation de la map                  |  'G' et 'J' (gauche/droite)   |   G/D croix directionnelle    |   G/D croix d. (manette 1)    |
-Ouvrir/Fermer paramètres            |         'BACKSPACE'           |            select             |       select (manette 1)      |
-Déplacer dans paramètres            |      'Y', 'G', 'H' et 'J'     |     croix directionnelle      |      croix d. (manette 1)     |
-------------- PLAYER 1 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Naviguer entre les choix            |           'zqsd'              |        joystick gauche        |     joystick gauche (m.1)     |
-Se mettre "Ready"                   |           'SPACE'             |              LT               |           LT (m.1)            |
-------------- PLAYER 2 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Naviguer entre les choix            |    flèches directionnelles    |        joystick droit         |     joystick gauche (m.2)     |
-Se mettre "Ready"                   |           'RETURN'            |              RT               |           LT (m.2)            |
-------------- PLAYER 3 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Ajouter/Supprimer le player         |                               |                               |  clique joystick droit (m.1)  |
-Naviguer entre les choix            |                               |                               |     joystick droit (m.1)      |
-Se mettre "Ready"                   |                               |                               |           RT (m.1)            |
-------------- PLAYER 4 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Ajouter/Supprimer le player         |                               |                               |  clique joystick droit (m.2)  |
-Naviguer entre les choix            |                               |                               |     joystick droit (m.2)      |
-Se mettre "Ready"                   |                               |                               |           RT (m.2)            |
--=-=-=-=-=-=-=- JEU -=-=-=-=-=-=-=- |= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|
-------------- PLAYER 1 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |           'zqsd'              |        joystick gauche        |     joystick gauche (m.1)     |
-Avancer (dépenser du Wac)           |           'SPACE'             |              LT               |           LT (m.1)            |
-------------- PLAYER 2 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |    flèches directionnelles    |        joystick droit         |     joystick gauche (m.2)     |
-Avancer (dépenser du Wac)           |           'RETURN'            |              RT               |           LT (m.2)            |
-------------- PLAYER 3 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |                               |                               |     joystick droit (m.1)      |
-Avancer (dépenser du Wac)           |                               |                               |           RT (m.1)            |
-------------- PLAYER 4 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |                               |                               |     joystick droit (m.2)      |
-Avancer (dépenser du Wac)           |                               |                               |           RT (m.2)            |
+============= COMMANDES ============|  0 MANETTE (clavier) |    1 MANETTE    |    2 MANETTES    |      3 MANETTES       |     4 MANETTES(+)     |
+-=-=-=-=-=-=-=- MENU -=-=-=-=-=-=-=-|= = = = = = = = = = = |= = = = = = = = = |= = = = = = = = = |= = = = = = = = = = = |= = = = = = = = = = = |
+Changer de Map                      |   'Y' et 'H'         | croix dir.      | croix dir. (M1) |   croix dir. (M1)   |   croix dir. (M1)   |
+Rotation de la map                  |   'G' et 'J'         | croix dir.      | croix dir. (M1) |   croix dir. (M1)   |   croix dir. (M1)   |
+Ouvrir/Fermer paramètres            |      'BACKSPACE'     |    select       |  select (M1)    |     select (M1)     |     select (M1)     |
+Déplacer dans paramètres            |   'Y', 'G', 'H', 'J' |    croix dir.   |  croix dir. (M1)|   croix dir. (M1)   |   croix dir. (M1)   |
+------------- PLAYER 1 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Naviguer entre les choix            |       'zqsd'         | joystick gauche | joy. gauche (M1)|   joy. gauche (M1)  |   joy. gauche (M1)  |
+Se mettre "Ready"                   |       'SPACE'        |        LT       |     LT (M1)     |       LT (M1)       |       LT (M1)       |
+------------- PLAYER 2 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Naviguer entre les choix            | flèches dir.         | joystick droit  | joy. gauche (M2)|   joy. gauche (M2)  |   joy. gauche (M2)  |
+Se mettre "Ready"                   |       'RETURN'       |        RT       |     LT (M2)     |       LT (M2)       |       LT (M2)       |
+------------- PLAYER 3 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Ajouter/Supprimer le player         |                      |                 | click joy. dr(M1)| click joy. ga.(M3)  | click joy. ga.(M3)  |
+Naviguer entre les choix            |                      |                 | joy. droit (M1) |   joy. gauche (M3)  |   joy. gauche (M3)  |
+Se mettre "Ready"                   |                      |                 |     RT (M1)     |       LT (M3)       |       LT (M3)       |
+------------- PLAYER 4 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Ajouter/Supprimer le player         |                      |                 | click joy. dr(M2)| click joy. dr.(M1)  | click joy. ga.(M4)  |
+Naviguer entre les choix            |                      |                 | joy. droit (M2) |   joy. droit (M1)   |   joy. gauche (M4)  |
+Se mettre "Ready"                   |                      |                 |     RT (M2)     |       RT (M1)       |       LT (M4)       |
+-=-=-=-=-=-=-=- JEU -=-=-=-=-=-=-=- |= = = = = = = = = = = |= = = = = = = = = |= = = = = = = = = |= = = = = = = = = = = |= = = = = = = = = = = |
+------------- PLAYER 1 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Déplacements                        |       'zqsd'         | joystick gauche | joy. gauche (M1)|   joy. gauche (M1)  |   joy. gauche (M1)  |
+Avancer (dépenser du Wac)           |       'SPACE'        |        LT       |     LT (M1)     |       LT (M1)       |       LT (M1)       |
+------------- PLAYER 2 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Déplacements                        |    flèches dir.      | joystick droit  | joy. gauche (M2)|   joy. gauche (M2)  |   joy. gauche (M2)  |
+Avancer (dépenser du Wac)           |       'RETURN'       |        RT       |     LT (M2)     |       LT (M2)       |       LT (M2)       |
+------------- PLAYER 3 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Déplacements                        |                      |                 | joy. droit (M1) |   joy. gauche (M3)  |   joy. gauche (M3)  |
+Avancer (dépenser du Wac)           |                      |                 |     RT (M1)     |       LT (M3)       |       LT (M3)       |
+------------- PLAYER 4 -------------|- - - - - - - - - - -|- - - - - - - - - |- - - - - - - - - |- - - - - - - - - - - |- - - - - - - - - - - |
+Déplacements                        |                      |                 | joy. droit (M2) |   joy. droit (M1)   |   joy. gauche (M4)  |
+Avancer (dépenser du Wac)           |                      |                 |     RT (M2)     |       RT (M1)       |       LT (M4)       |
 """
 
 import pygame
@@ -94,6 +94,7 @@ def main():
         'map_width': settings.MAP_WIDTH_METERS,
         'slope_correction': settings.SLOPE_CORRECTION,
         'brake_correction': settings.BRAKE_CORRECTION,
+        'ai_enabled': settings.AI_ENABLED,
     }
     for i in range(1, 5):
         game_settings[f'p{i}_role'] = 'predator' if i == settings.PREDATOR_PLAYER else 'prey'
@@ -186,3 +187,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

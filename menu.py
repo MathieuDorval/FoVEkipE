@@ -50,7 +50,9 @@ def menu_loop(screen, clock, gamepads, game_settings):
 
         menu_actions = get_menu_inputs(gamepads)
         num_joysticks = len(gamepads)
-        max_players = 4 if num_joysticks >= 2 else 2
+        
+        # Le nombre maximum de joueurs est toujours 4, mais les contrôles dépendent des manettes.
+        max_players = 4
 
         if menu_actions['map_nav_y'] != 0 and last_inputs.get('map_nav_y', 0) == 0:
             direction = menu_actions['map_nav_y']
@@ -60,13 +62,19 @@ def menu_loop(screen, clock, gamepads, game_settings):
         map_rotation_angle -= menu_actions['map_rotate_x'] * settings.ROTATION_SPEED * 2
 
         if menu_actions['open_settings'] and not last_inputs.get('open_settings', False):
-            if not is_first_frame: menu_settings_loop(screen, clock, gamepads, game_settings)
+            if not is_first_frame: 
+                menu_settings_loop(screen, clock, gamepads, game_settings)
+                # Si l'IA est désactivée, on s'assure qu'aucun joueur n'est une IA
+                if not game_settings.get('ai_enabled'):
+                    for i in range(1, 5):
+                        if game_settings[f'p{i}_status'] == 'AI':
+                            game_settings[f'p{i}_status'] = 'PLAYER'
 
-        if num_joysticks >= 2:
-            if menu_actions['p3_toggle_active'] and not last_inputs.get('p3_toggle_active', False):
-                game_settings['p3_status'] = "PLAYER" if game_settings['p3_status'] == "INACTIVE" else "INACTIVE"
-            if menu_actions['p4_toggle_active'] and not last_inputs.get('p4_toggle_active', False):
-                game_settings['p4_status'] = "PLAYER" if game_settings['p4_status'] == "INACTIVE" else "INACTIVE"
+
+        if menu_actions['p3_toggle_active'] and not last_inputs.get('p3_toggle_active', False):
+            game_settings['p3_status'] = "PLAYER" if game_settings['p3_status'] == "INACTIVE" else "INACTIVE"
+        if menu_actions['p4_toggle_active'] and not last_inputs.get('p4_toggle_active', False):
+            game_settings['p4_status'] = "PLAYER" if game_settings['p4_status'] == "INACTIVE" else "INACTIVE"
 
         for i in range(1, max_players + 1):
             is_player_active = game_settings[f'p{i}_status'] != "INACTIVE"
@@ -138,10 +146,20 @@ def menu_loop(screen, clock, gamepads, game_settings):
 
                 if nav_x != 0 and last_inputs.get(f'p{i}_nav_x', 0) == 0:
                     if current_focus == 0:
-                        statuses = ["PLAYER", "AI"]
+                        statuses = ["PLAYER"]
+                        if game_settings.get('ai_enabled', True):
+                            statuses.append("AI")
+                        
                         current_status = game_settings[f'p{i}_status']
-                        current_idx = statuses.index(current_status) if current_status in statuses else 0
-                        game_settings[f'p{i}_status'] = statuses[(current_idx + nav_x + len(statuses)) % len(statuses)]
+                        
+                        try:
+                            current_idx = statuses.index(current_status)
+                        except ValueError:
+                            current_idx = 0
+                            game_settings[f'p{i}_status'] = "PLAYER"
+                            
+                        new_idx = (current_idx + nav_x) % len(statuses)
+                        game_settings[f'p{i}_status'] = statuses[new_idx]
                     elif current_focus == 1:
                         game_settings[f'p{i}_role'] = 'prey' if game_settings[f'p{i}_role'] == 'predator' else 'predator'
                     elif current_focus == 2:
@@ -184,3 +202,4 @@ def menu_loop(screen, clock, gamepads, game_settings):
         pygame.display.flip()
 
     return False, 0
+

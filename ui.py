@@ -255,7 +255,7 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
         pygame.Rect(screen_w - panel_width - margin_x, screen_h - panel_height - margin_y, panel_width, panel_height) # Bas-droite
     ]
     
-    max_players = 4 if pygame.joystick.get_count() >= 2 else 2
+    max_players = 4
 
     for i in range(max_players):
         player_id = i + 1
@@ -287,11 +287,12 @@ def draw_settings_menu(screen, game_settings, selected_index, option_keys):
     screen.blit(title_text, title_rect)
     
     options = {
-        "Round Duration": f"{game_settings['round_duration']}s",
-        "Winning Score": f"{game_settings['winning_score']}",
-        "Map Width": f"{game_settings['map_width']}m",
+        "Round Duration": f"{game_settings.get('round_duration', 30)}s",
+        "Winning Score": f"{game_settings.get('winning_score', 3)}",
+        "Map Width": f"{game_settings.get('map_width', 15)}m",
         "Slope Correction": "On" if game_settings.get('slope_correction') else "Off",
-        "Brake Correction": "On" if game_settings.get('brake_correction') else "Off"
+        "Brake Correction": "On" if game_settings.get('brake_correction') else "Off",
+        "AI": "On" if game_settings.get('ai_enabled') else "Off"
     }
     
     for i, key in enumerate(option_keys):
@@ -369,3 +370,4 @@ def draw_killcam_hud(screen, top_text, bottom_text, bottom_text_color):
     bg_surf.fill((0, 0, 0, 150))
     screen.blit(bg_surf, bg_rect)
     screen.blit(bottom_surf, bottom_rect)
+

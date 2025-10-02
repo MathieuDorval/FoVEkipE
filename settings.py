@@ -63,3 +63,5 @@ PLAYER1_ANIMAL          = "Wolf"
 PLAYER2_ANIMAL          = "Deer"
 PLAYER3_ANIMAL          = "Deer"
 PLAYER4_ANIMAL          = "Deer"
+AI_ENABLED              = True
+
