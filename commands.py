@@ -33,7 +33,7 @@ def init_joysticks():
 
 def get_menu_inputs(gamepads):
     """
-    Gère les commandes pour le menu avec une navigation unifiée au joystick.
+    Gère les commandes pour le menu.
     """
     actions = {
         'map_nav_y': 0, 'map_rotate_x': 0, 'open_settings': False,
@@ -170,4 +170,3 @@ def get_confirm_action(gamepads):
         if keys[pygame.K_SPACE]:
             return True
     return False
-

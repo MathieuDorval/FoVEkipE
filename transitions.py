@@ -9,7 +9,7 @@
 #      \ \_\  \ \_\ \_\  \ \_\ \_\  \ \_\\"\_\  \/\_____\  \ \_\    \ \_\  \ \_\  \ \_____\  \ \_\\"\_\  \/\_____\ 
 #       \/_/   \/_/ /_/   \/_/\/_/   \/_/ \/_/   \/_____/   \/_/     \/_/   \/_/   \/_____/   \/_/ \/_/   \/_____/
 #   (version 24/09)
-#   -> Manages game transitions
+#   -> Manages round transitions
 
 import pygame
 import settings
@@ -33,9 +33,7 @@ def get_player_panel_rects(screen):
 
 def play_start_transition(screen, clock, players, map_renderer, map_rotation_angle):
     """
-    Joue l'animation de départ de 3 secondes pour tous les joueurs.
-    L'image du personnage sélectionné se déplace de son pannel vers sa position de départ
-    sur la carte, tout en se transformant en un point de couleur.
+    Joue l'animation de départ.
     """
     load_animal_images()
     duration = 3.0
@@ -93,7 +91,7 @@ def play_start_transition(screen, clock, players, map_renderer, map_rotation_ang
 
             dot_alpha = int(255 * progress)
             dot_surface = pygame.Surface((10, 10), pygame.SRCALPHA)
-            pygame.draw.circle(dot_surface, (*anim['player'].color, dot_alpha), (5, 5), 5)
+            pygame.draw.circle(dot_surface, (*anim['player'].color, dot_alpha), (5, 5), settings.POINT_SCALE)
             dot_rect = dot_surface.get_rect(center=current_pos)
             screen.blit(dot_surface, dot_rect)
 
@@ -110,8 +108,7 @@ def play_start_transition(screen, clock, players, map_renderer, map_rotation_ang
 
 def play_round_reset_transition(screen, clock, players, map_renderer, map_rotation_angle, last_screen_positions, new_screen_positions):
     """
-    Joue l'animation de réinitialisation entre les manches.
-    Le point du joueur se déplace de sa dernière position (dans la killcam) vers sa nouvelle position.
+    Joue l'animation entre les manches.
     """
     duration = 2.0
     start_time = pygame.time.get_ticks()
@@ -143,14 +140,14 @@ def play_round_reset_transition(screen, clock, players, map_renderer, map_rotati
     while running:
         elapsed_time = (pygame.time.get_ticks() - start_time) / 1000.0
         progress = min(elapsed_time / duration, 1.0)
-        eased_progress = progress * progress * (3 - 2 * progress) # ease-in-out
+        eased_progress = progress * progress * (3 - 2 * progress)
 
         screen.fill(settings.BLACK)
         map_renderer.draw_map(map_rotation_angle, map_renderer.game_settings)
 
         for anim in player_animations:
             current_pos = anim['start_pos'].lerp(anim['end_pos'], eased_progress)
-            pygame.draw.circle(screen, anim['player'].color, current_pos, 5)
+            pygame.draw.circle(screen, anim['player'].color, current_pos, settings.POINT_SCALE)
 
         pygame.display.flip()
         clock.tick(settings.FPS)

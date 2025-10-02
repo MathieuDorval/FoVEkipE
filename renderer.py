@@ -132,7 +132,7 @@ class MapRenderer:
         """
         z = self.get_z(x, y) + settings.PLAYER_Z_OFFSET
         screen_pos = self._project_isometric(x, y, z * settings.Z_BOOST_FACTOR, rotation_angle)
-        pygame.draw.circle(self.screen, color, screen_pos, 5)
+        pygame.draw.circle(self.screen, color, screen_pos, settings.POINT_SCALE)
 
     def draw_particle(self, x, y, z, color, alpha, rotation_angle):
         """

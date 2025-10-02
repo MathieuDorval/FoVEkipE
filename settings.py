@@ -40,6 +40,7 @@ ISO_ANGLE               = math.radians(30)
 Z_BOOST_FACTOR          = 6.0   # mutiplicateur de hauteur de map (visuel)
 PLAYER_Z_OFFSET         = 0.05
 MAX_SLOPE               = 30    # pente max (en %) d'une map
+POINT_SCALE             = 8
 
 # --- JOSYTICKS ---
 JOYSTICK_DEADZONE = 0.15

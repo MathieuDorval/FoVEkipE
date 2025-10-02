@@ -85,7 +85,7 @@ def draw_game_info(screen, scores, round_time, players, round_duration):
             animal_name = predator.animal['name']
             if animal_name in ANIMAL_IMAGES:
                 img = ANIMAL_IMAGES[animal_name]['small']
-                img_y_pos = y_offset_pred + (img_size - bar_height) / 2 - img_size / 2 # Centrer l'image verticalement
+                img_y_pos = y_offset_pred + (img_size - bar_height) / 2 - img_size / 2
                 screen.blit(img, (pred_rect.right - bar_width - img_size - img_padding, img_y_pos))
             
             # WAC Bar
@@ -108,7 +108,7 @@ def draw_game_info(screen, scores, round_time, players, round_duration):
             animal_name = prey.animal['name']
             if animal_name in ANIMAL_IMAGES:
                 img = ANIMAL_IMAGES[animal_name]['small']
-                img_y_pos = y_offset_prey + (img_size - bar_height) / 2 - img_size / 2 # Centrer l'image verticalement
+                img_y_pos = y_offset_prey + (img_size - bar_height) / 2 - img_size / 2
                 screen.blit(img, (prey_rect.left + bar_width + img_padding, img_y_pos))
 
             # WAC Bar
@@ -171,12 +171,12 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
     screen.blit(role_surf, role_rect)
     pygame.draw.line(screen, separator_color, section_role_rect.bottomleft, section_role_rect.bottomright, 1)
 
-    # --- Section 3 : Personnage ---
+    # --- Section 3 : Animal ---
     if not is_ready and focused_item_index == 2:
         highlight_surf = pygame.Surface(section_character_rect.size, pygame.SRCALPHA); highlight_surf.fill(highlight_color)
         screen.blit(highlight_surf, section_character_rect.topleft)
     
-    # --- Sous-sections pour le personnage ---
+    # --- Sous-sections pour les animaux ---
     character_preview_height = section_character_height * (25 / 90)
     character_grid_height = section_character_height * (65 / 90)
     character_preview_rect = pygame.Rect(section_character_rect.left, section_character_rect.top, section_character_rect.width, character_preview_height)

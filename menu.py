@@ -184,4 +184,3 @@ def menu_loop(screen, clock, gamepads, game_settings):
         pygame.display.flip()
 
     return False, 0
-
