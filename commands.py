@@ -86,12 +86,10 @@ def get_menu_inputs(gamepads):
 
     elif num_gamepads == 1:
         g1 = gamepads[0]
-        actions['p1_nav_x'] = get_axis(g1, 0)
-        actions['p1_nav_y'] = get_axis(g1, 1)
-        actions['p1_confirm'] = get_trigger_confirm(g1, 4) # LT
-        actions['p2_nav_x'] = get_axis(g1, 2)
-        actions['p2_nav_y'] = get_axis(g1, 3)
-        actions['p2_confirm'] = get_trigger_confirm(g1, 5) # RT
+        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4) # LT
+        actions['p2_nav_x'] = get_axis(g1, 2); actions['p2_nav_y'] = get_axis(g1, 3); actions['p2_confirm'] = get_trigger_confirm(g1, 5) # RT
+        actions['p1_toggle_active'] = get_button(g1, 8) # Left stick click
+        actions['p2_toggle_active'] = get_button(g1, 9) # Right stick click
 
     elif num_gamepads == 2:
         g1, g2 = gamepads[0], gamepads[1]
@@ -100,28 +98,34 @@ def get_menu_inputs(gamepads):
         actions['p3_nav_x'] = get_axis(g1, 2); actions['p3_nav_y'] = get_axis(g1, 3); actions['p3_confirm'] = get_trigger_confirm(g1, 5)
         actions['p4_nav_x'] = get_axis(g2, 2); actions['p4_nav_y'] = get_axis(g2, 3); actions['p4_confirm'] = get_trigger_confirm(g2, 5)
         
-        actions['p3_toggle_active'] = get_button(g1, 9) # Click joystick droit M1
-        actions['p4_toggle_active'] = get_button(g2, 9) # Click joystick droit M2
+        actions['p1_toggle_active'] = get_button(g1, 8)
+        actions['p2_toggle_active'] = get_button(g2, 8)
+        actions['p3_toggle_active'] = get_button(g1, 9)
+        actions['p4_toggle_active'] = get_button(g2, 9)
 
     elif num_gamepads == 3:
         g1, g2, g3 = gamepads[0], gamepads[1], gamepads[2]
-        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4) # P1: M1 Gauche
-        actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4) # P2: M2 Gauche
-        actions['p3_nav_x'] = get_axis(g3, 0); actions['p3_nav_y'] = get_axis(g3, 1); actions['p3_confirm'] = get_trigger_confirm(g3, 4) # P3: M3 Gauche
-        actions['p4_nav_x'] = get_axis(g1, 2); actions['p4_nav_y'] = get_axis(g1, 3); actions['p4_confirm'] = get_trigger_confirm(g1, 5) # P4: M1 Droit
+        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)
+        actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4)
+        actions['p3_nav_x'] = get_axis(g3, 0); actions['p3_nav_y'] = get_axis(g3, 1); actions['p3_confirm'] = get_trigger_confirm(g3, 4)
+        actions['p4_nav_x'] = get_axis(g1, 2); actions['p4_nav_y'] = get_axis(g1, 3); actions['p4_confirm'] = get_trigger_confirm(g1, 5)
         
-        actions['p3_toggle_active'] = get_button(g3, 8)  # Click joystick gauche M3
-        actions['p4_toggle_active'] = get_button(g1, 9) # Click joystick droit M1
+        actions['p1_toggle_active'] = get_button(g1, 8)
+        actions['p2_toggle_active'] = get_button(g2, 8)
+        actions['p3_toggle_active'] = get_button(g3, 8)
+        actions['p4_toggle_active'] = get_button(g1, 9)
 
     elif num_gamepads >= 4:
         g1, g2, g3, g4 = gamepads[0], gamepads[1], gamepads[2], gamepads[3]
-        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4) # P1: M1 Gauche
-        actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4) # P2: M2 Gauche
-        actions['p3_nav_x'] = get_axis(g3, 0); actions['p3_nav_y'] = get_axis(g3, 1); actions['p3_confirm'] = get_trigger_confirm(g3, 4) # P3: M3 Gauche
-        actions['p4_nav_x'] = get_axis(g4, 0); actions['p4_nav_y'] = get_axis(g4, 1); actions['p4_confirm'] = get_trigger_confirm(g4, 4) # P4: M4 Gauche
+        actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)
+        actions['p2_nav_x'] = get_axis(g2, 0); actions['p2_nav_y'] = get_axis(g2, 1); actions['p2_confirm'] = get_trigger_confirm(g2, 4)
+        actions['p3_nav_x'] = get_axis(g3, 0); actions['p3_nav_y'] = get_axis(g3, 1); actions['p3_confirm'] = get_trigger_confirm(g3, 4)
+        actions['p4_nav_x'] = get_axis(g4, 0); actions['p4_nav_y'] = get_axis(g4, 1); actions['p4_confirm'] = get_trigger_confirm(g4, 4)
         
-        actions['p3_toggle_active'] = get_button(g3, 8) # Click joystick gauche M3
-        actions['p4_toggle_active'] = get_button(g4, 8) # Click joystick gauche M4
+        actions['p1_toggle_active'] = get_button(g1, 8)
+        actions['p2_toggle_active'] = get_button(g2, 8)
+        actions['p3_toggle_active'] = get_button(g3, 8)
+        actions['p4_toggle_active'] = get_button(g4, 8)
 
     return actions
 
@@ -218,3 +222,4 @@ def get_confirm_action(gamepads):
         if keys[pygame.K_SPACE] or keys[pygame.K_RETURN]:
             return True
     return False
+

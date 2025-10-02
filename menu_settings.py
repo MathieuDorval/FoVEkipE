@@ -26,7 +26,8 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         "Map Width": "map_width",
         "Slope Correction": "slope_correction",
         "Brake Correction": "brake_correction",
-        "AI": "ai_enabled"
+        "AI": "ai_enabled",
+        "Quit Game": "quit_game"
     }
     option_keys = list(options.keys())
     selected_index = 0
@@ -46,28 +47,34 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         if nav_y != 0 and last_nav_y == 0:
             selected_index = (selected_index - nav_y + len(option_keys)) % len(option_keys)
         
+        # --- Handle value changes with horizontal navigation ---
         if nav_x != 0 and last_nav_x == 0:
             key_to_change = options[option_keys[selected_index]]
-            current_value = game_settings.get(key_to_change)
             
             if key_to_change == "round_duration":
+                current_value = game_settings.get(key_to_change)
                 new_value = current_value + nav_x * 5
                 game_settings[key_to_change] = max(5, min(90, new_value))
             elif key_to_change == "winning_score":
+                current_value = game_settings.get(key_to_change)
                 new_value = current_value + nav_x
                 game_settings[key_to_change] = max(1, min(10, new_value))
             elif key_to_change == "map_width":
+                current_value = game_settings.get(key_to_change)
                 new_value = current_value + nav_x
                 game_settings[key_to_change] = max(5, min(100, new_value))
-            elif key_to_change == "slope_correction":
+            elif key_to_change in ["slope_correction", "brake_correction", "ai_enabled"]:
+                current_value = game_settings.get(key_to_change)
                 game_settings[key_to_change] = not current_value
-            elif key_to_change == "brake_correction":
-                game_settings[key_to_change] = not current_value
-            elif key_to_change == "ai_enabled":
-                game_settings[key_to_change] = not current_value if current_value is not None else False
 
+        # --- Handle select button press ---
         if menu_actions['open_settings'] and not last_select_button:
-            running = False
+            selected_action = options[option_keys[selected_index]]
+            if selected_action == "quit_game":
+                pygame.quit()
+                exit()
+            else:
+                running = False # Close settings menu for any other option
         
         last_nav_y = nav_y
         last_nav_x = nav_x
