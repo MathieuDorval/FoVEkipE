@@ -60,11 +60,12 @@ TIME_KILLCAM            = 3.0
 KILLCAM_N_PARTICLES     = 50
 PREDATOR_PLAYER         = 1
 MIN_DISTANCE_PREDATOR   = 0.4
-COLLISION_DISTANCE      = 0.05
+COLLISION_DISTANCE      = 0.04
 N_ANIMALS_TO_SELECT     = 9
 PLAYER1_ANIMAL          = "Wolf"
 PLAYER2_ANIMAL          = "Deer"
 PLAYER3_ANIMAL          = "Deer"
 PLAYER4_ANIMAL          = "Deer"
 AI_ENABLED              = False
+
 
