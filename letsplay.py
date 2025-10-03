@@ -21,6 +21,85 @@ from ai import get_ai_inputs
 from transitions import play_start_transition, play_round_reset_transition
 import logs
 
+def update_vibrations(players, gamepads, game_settings):
+    if not game_settings.get('vibration_mode', False) or len(gamepads) < 2:
+        for gamepad in gamepads:
+            if gamepad.get_init():
+                try: gamepad.rumble(0, 0, 0)
+                except pygame.error: pass
+        return
+
+    map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
+    max_vibration_distance = map_width * settings.VIBRATION_DISTANCE_RATIO 
+    infinity_map_enabled = game_settings.get('infinity_map', False)
+
+    human_players = [p for p in players if not p.is_ai]
+
+    for player in human_players:
+        if player.id > len(gamepads): continue
+        
+        gamepad = gamepads[player.id - 1]
+        if not gamepad.get_init(): continue
+
+        strongest_left, strongest_right = 0.0, 0.0
+        p1_pos = pygame.Vector2(player.x, player.y)
+        p1_forward = player.last_direction.normalize()
+        p1_right = p1_forward.rotate(90)
+
+        opponents = [p for p in players if p.role != player.role and p.is_active]
+        
+        if not opponents:
+            try: gamepad.rumble(0, 0, 100)
+            except pygame.error: pass
+            continue
+
+        for opponent in opponents:
+            p2_pos = pygame.Vector2(opponent.x, opponent.y)
+
+            vec_to_p2 = p2_pos - p1_pos
+            dist = vec_to_p2.length()
+
+            if infinity_map_enabled:
+                shortest_dist_sq = vec_to_p2.length_squared()
+                
+                for dx in [-map_width, 0, map_width]:
+                    for dy in [-map_width, 0, map_width]:
+                        if dx == 0 and dy == 0:
+                            continue
+                        
+                        wrapped_p2_pos = p2_pos + pygame.Vector2(dx, dy)
+                        dist_sq = (wrapped_p2_pos - p1_pos).length_squared()
+                        
+                        if dist_sq < shortest_dist_sq:
+                            shortest_dist_sq = dist_sq
+                            vec_to_p2 = wrapped_p2_pos - p1_pos
+                
+                dist = shortest_dist_sq**0.5
+
+            if dist > max_vibration_distance or dist == 0: continue
+
+            intensity = 1.0 - (dist / max_vibration_distance)
+            intensity = max(0.0, min(1.0, intensity**2))
+
+            vec_to_p2_norm = vec_to_p2.normalize()
+            dot_forward = vec_to_p2_norm.dot(p1_forward)
+            dot_right = vec_to_p2_norm.dot(p1_right)
+
+            if dot_forward > 0.707:
+                strongest_left = max(strongest_left, intensity)
+                strongest_right = max(strongest_right, intensity)
+            elif dot_forward < -0.707:
+                pass
+            else:
+                if dot_right > 0:
+                    strongest_right = max(strongest_right, intensity)
+                else:
+                    strongest_left = max(strongest_left, intensity)
+        
+        try: gamepad.rumble(strongest_left, strongest_right, 100)
+        except pygame.error: pass
+
+
 def reset_players_positions(players, game_settings):
     """
     Place the prey and predators on the map.
@@ -100,6 +179,9 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
                 action = get_ai_inputs(player, active_players_list, game_settings) if player.is_ai else get_player_action(player.id, gamepads, map_rotation_angle)
                 player.update(action['direction'], action['intensity'], dt, surface_data, game_settings)
             
+            if game_settings.get('vibration_mode', False):
+                update_vibrations(active_players_list, gamepads, game_settings)
+
             logs.add_frame_to_round(round_data, players, round_time, surface_data, game_settings)
 
             predators = [p for p in active_players_list if p.role == 'predator']
@@ -133,6 +215,11 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
                 map_renderer.draw_point(player.x, player.y, player.color, map_rotation_angle)
             draw_game_info(screen, scores, round_time, players, game_settings['round_duration'])
             pygame.display.flip()
+        
+        for g in gamepads:
+            if g.get_init():
+                try: g.rumble(0, 0, 0)
+                except pygame.error: pass
 
         active_at_end = [p for p in players if p.is_active]
         round_winner_role = 'predator' if not any(p.role == 'prey' for p in active_at_end) else ('prey' if round_time >= game_settings.get('round_duration', 30) else 'None')
@@ -161,7 +248,13 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
 
                 play_round_reset_transition(screen, clock, players, map_renderer, map_rotation_angle, last_screen_positions, new_screen_positions)
     
+    for g in gamepads:
+        if g.get_init():
+            try: g.rumble(0, 0, 0)
+            except pygame.error: pass
+            
     logs.finalize_game_data(game_data, scores, players, game_settings.get('winning_score', 3))
     draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings)
     
     return True
+

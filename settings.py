@@ -46,12 +46,16 @@ MAX_SLOPE               = 30
 POINT_SCALE             = 8
 
 # --- JOSYTICKS ---
-JOYSTICK_DEADZONE = 0.15
+JOYSTICK_DEADZONE       = 0.15
+VIBRATION_DISTANCE_RATIO= 0.5
 
 # --- PHYSICS ---
 GRAVITY = 9.81
 SLOPE_CORRECTION        = True
 BRAKE_CORRECTION        = True
+VC_SPEED                = False
+INFINITY_MAP            = False
+VIBRATION_MODE          = False
 
 # --- GAME RULES ---
 ROUND_DURATION          = 30
@@ -67,3 +71,5 @@ PLAYER2_ANIMAL          = "Deer"
 PLAYER3_ANIMAL          = "Deer"
 PLAYER4_ANIMAL          = "Deer"
 AI_ENABLED              = False
+WAC_RATIO               = 1.0
+

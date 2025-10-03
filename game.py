@@ -50,6 +50,10 @@ def main():
         'slope_correction': settings.SLOPE_CORRECTION,
         'brake_correction': settings.BRAKE_CORRECTION,
         'ai_enabled': settings.AI_ENABLED,
+        'wac_ratio': settings.WAC_RATIO,
+        'vc_speed': settings.VC_SPEED,
+        'infinity_map': settings.INFINITY_MAP,
+        'vibration_mode': settings.VIBRATION_MODE,
     }
     for i in range(1, 5):
         game_settings[f'p{i}_role'] = 'predator' if i == settings.PREDATOR_PLAYER else 'prey'

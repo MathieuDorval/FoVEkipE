@@ -24,6 +24,10 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         "Round Duration": "round_duration",
         "Winning Score": "winning_score",
         "Map Width": "map_width",
+        "Wac Ratio": "wac_ratio",
+        "VC Speed": "vc_speed",
+        "Infinity Map": "infinity_map",
+        "Vibration Mode": "vibration_mode",
         "Slope Correction": "slope_correction",
         "Brake Correction": "brake_correction",
         "AI": "ai_enabled",
@@ -62,7 +66,15 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
                 current_value = game_settings.get(key_to_change)
                 new_value = current_value + nav_x
                 game_settings[key_to_change] = max(5, min(100, new_value))
-            elif key_to_change in ["slope_correction", "brake_correction", "ai_enabled"]:
+            elif key_to_change == "wac_ratio":
+                current_value = game_settings.get(key_to_change)
+                new_value = round(current_value + nav_x * 0.2, 1)
+                game_settings[key_to_change] = max(0.0, min(10.0, new_value))
+            elif key_to_change == "vibration_mode":
+                if len(gamepads) >= 2:
+                    current_value = game_settings.get(key_to_change)
+                    game_settings[key_to_change] = not current_value
+            elif key_to_change in ["slope_correction", "brake_correction", "ai_enabled", "vc_speed", "infinity_map"]:
                 current_value = game_settings.get(key_to_change)
                 game_settings[key_to_change] = not current_value
 
@@ -78,8 +90,9 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         last_select_button = menu_actions['open_settings']
         
         screen.fill(settings.BLACK)
-        draw_settings_menu(screen, game_settings, selected_index, option_keys)
+        draw_settings_menu(screen, game_settings, selected_index, option_keys, len(gamepads))
         pygame.display.flip()
         clock.tick(settings.FPS)
     
     return None
+

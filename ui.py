@@ -282,7 +282,7 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
 
     return panel_rects_to_return
 
-def draw_settings_menu(screen, game_settings, selected_index, option_keys):
+def draw_settings_menu(screen, game_settings, selected_index, option_keys, num_gamepads):
     font_title = pygame.font.Font(None, 50)
     font_option = pygame.font.Font(None, 36)
     
@@ -298,6 +298,10 @@ def draw_settings_menu(screen, game_settings, selected_index, option_keys):
         "Round Duration": f"{game_settings.get('round_duration', 30)}s",
         "Winning Score": f"{game_settings.get('winning_score', 3)}",
         "Map Width": f"{game_settings.get('map_width', 15)}m",
+        "Wac Ratio": f"{game_settings.get('wac_ratio', 1.0):.1f}",
+        "VC Speed": "On" if game_settings.get('vc_speed') else "Off",
+        "Infinity Map": "On" if game_settings.get('infinity_map') else "Off",
+        "Vibration Mode": "On" if game_settings.get('vibration_mode') else "Off",
         "Slope Correction": "On" if game_settings.get('slope_correction') else "Off",
         "Brake Correction": "On" if game_settings.get('brake_correction') else "Off",
         "AI": "On" if game_settings.get('ai_enabled') else "Off",
@@ -306,17 +310,26 @@ def draw_settings_menu(screen, game_settings, selected_index, option_keys):
     
     for i, key in enumerate(option_keys):
         value = options.get(key, '')
-        if key == "Quit Game":
-            option_text = key
+        
+        is_disabled = False
+        display_text = ""
+
+        if key == "Vibration Mode" and num_gamepads < 2:
+            is_disabled = True
+            display_text = f"{key}: (Requiert 2+ manettes)"
+        elif key == "Quit Game":
+            display_text = key
         else:
-            option_text = f"{key}: {value}"
+            display_text = f"{key}: {value}"
             
-        color = (255, 255, 100) if i == selected_index else settings.WHITE
-        if key == "Quit Game":
+        color = (255, 255, 100) if i == selected_index and not is_disabled else settings.WHITE
+        if is_disabled:
+            color = (100, 100, 100)
+        elif key == "Quit Game":
             color = (255, 100, 100) if i == selected_index else (200, 50, 50)
             
-        text_surf = font_option.render(option_text, True, color)
-        text_rect = text_surf.get_rect(centerx=screen.get_width() // 2, y=150 + i * 60)
+        text_surf = font_option.render(display_text, True, color)
+        text_rect = text_surf.get_rect(centerx=screen.get_width() // 2, y=150 + i * 45)
         screen.blit(text_surf, text_rect)
         
     help_text = font_option.render("Press Select to close", True, (150, 150, 150))
@@ -387,3 +400,4 @@ def draw_killcam_hud(screen, top_text, bottom_text, bottom_text_color):
     bg_surf.fill((0, 0, 0, 150))
     screen.blit(bg_surf, bg_rect)
     screen.blit(bottom_surf, bottom_rect)
+
