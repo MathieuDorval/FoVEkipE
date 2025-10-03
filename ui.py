@@ -40,86 +40,120 @@ def load_animal_images():
             ANIMAL_IMAGES[animal['name']] = {'source': source_placeholder, 'small': small_placeholder}
 
 def draw_game_info(screen, scores, round_time, players, round_duration):
+    """
+    Affiche les informations de la partie (temps, WAC).
+    La zone supérieure de l'écran est divisée en trois :
+    - Gauche (1/4) : Barres de Wac des prédateurs.
+    - Centre (1/2) : Barre de temps qui diminue vers le centre.
+    - Droite (1/4) : Barres de Wac des proies.
+    """
     load_animal_images()
-    font_score = pygame.font.Font(None, 42)
-    font_timer = pygame.font.Font(None, 50)
     
-    # --- Timer ---
-    time_left = max(0, round_duration - round_time)
-    timer_text = font_timer.render(f"{time_left:.1f}", True, settings.WHITE)
-    timer_rect = timer_text.get_rect(midtop=(screen.get_width() // 2, 15))
-    screen.blit(timer_text, timer_rect)
+    screen_width = screen.get_width()
+    screen_height = screen.get_height()
 
-    # --- Scores ---
+    # --- Définition des zones de l'interface ---
+    info_bar_height = screen_height * 0.1
+    
+    left_zone_rect = pygame.Rect(0, 0, screen_width / 4, info_bar_height)
+    center_zone_rect = pygame.Rect(left_zone_rect.right, 0, screen_width / 2, info_bar_height)
+    right_zone_rect = pygame.Rect(center_zone_rect.right, 0, screen_width / 4, info_bar_height)
+
+    # --- Barre de temps (Zone Centrale) ---
+    time_left = max(0, round_duration - round_time)
+    time_ratio = time_left / round_duration if round_duration > 0 else 0
+
+    bar_max_width = center_zone_rect.width * 0.8
+    bar_height_time = info_bar_height * 0.3
+    
+    current_bar_width = bar_max_width * time_ratio
+    
+    # Arrière-plan de la barre de temps
+    bg_bar_rect = pygame.Rect(
+        center_zone_rect.centerx - bar_max_width / 2,
+        center_zone_rect.centery - bar_height_time / 2,
+        bar_max_width,
+        bar_height_time
+    )
+    pygame.draw.rect(screen, (40, 40, 40), bg_bar_rect)
+    
+    # Barre de temps qui se réduit
+    fg_bar_rect = pygame.Rect(
+        center_zone_rect.centerx - current_bar_width / 2,
+        bg_bar_rect.y,
+        current_bar_width,
+        bar_height_time
+    )
+    pygame.draw.rect(screen, settings.WHITE, fg_bar_rect)
+    
+    # Bordure
+    pygame.draw.rect(screen, settings.WHITE, bg_bar_rect, 2)
+
+    # --- Barres de Wac (Zones Gauche et Droite) ---
     predators = sorted([p for p in players if p.role == 'predator'], key=lambda p: p.id)
     preys = sorted([p for p in players if p.role == 'prey'], key=lambda p: p.id)
-    
-    predator_score = scores.get(predators[0].id, 0) if predators else 0
-    prey_score = scores.get(preys[0].id, 0) if preys else 0
 
-    pred_label = "PREDATORS" if len(predators) > 1 else "PREDATOR"
-    prey_label = "PREYS" if len(preys) > 1 else "PREY"
+    def draw_wac_bars(player_list, zone_rect, align_right=False):
+        """
+        Fonction interne pour dessiner les barres de Wac et l'image de l'animal.
+        """
+        if not player_list: return
+        
+        num_players = len(player_list)
+        total_bar_area_height = zone_rect.height * 0.9
+        
+        single_item_height = total_bar_area_height / num_players
+        bar_height = single_item_height * 0.7
+        bar_spacing = single_item_height - bar_height
+        
+        img_size = int(bar_height * 1.2)
+        img_padding = 8
+        
+        bar_width = zone_rect.width * 0.7 - img_size - img_padding
+        
+        total_block_height = num_players * (bar_height + bar_spacing) - bar_spacing
+        start_y = zone_rect.centery - total_block_height / 2
 
-    pred_text_str = f"{pred_label}: {predator_score}"
-    prey_text_str = f"{prey_label}: {prey_score}"
+        for i, player in enumerate(player_list):
+            if not player.is_active: continue
 
-    pred_text = font_score.render(pred_text_str, True, settings.COLOR_PREDATOR)
-    prey_text = font_score.render(prey_text_str, True, settings.COLOR_PREY)
+            # Calculs WAC
+            wac_max = player.stats.get('WacMax', 1)
+            wac_ratio = player.Wac / wac_max if wac_max > 0 else 0
+            remaining_wac_ratio = 1.0 - min(1.0, max(0.0, wac_ratio))
+            fg_wac_width = bar_width * remaining_wac_ratio
 
-    pred_rect = pred_text.get_rect(topright=(timer_rect.left - 50, 20))
-    prey_rect = prey_text.get_rect(topleft=(timer_rect.right + 50, 20))
+            # Positions
+            bar_y = start_y + i * (bar_height + bar_spacing)
+            img_y_pos = bar_y + (bar_height - img_size) / 2
 
-    screen.blit(pred_text, pred_rect)
-    screen.blit(prey_text, prey_rect)
+            if align_right: # Proies (droite)
+                img_x_pos = zone_rect.right - (zone_rect.width * 0.05) - img_size
+                bar_x = img_x_pos - img_padding - bar_width
+            else: # Prédateurs (gauche)
+                img_x_pos = zone_rect.left + (zone_rect.width * 0.05)
+                bar_x = img_x_pos + img_size + img_padding
 
-    # --- Wac & Player Images ---
-    bar_width = 150
-    bar_height = 15
-    bar_spacing = 5
-    img_size = 40
-    img_padding = 10
-
-    y_offset_pred = pred_rect.bottom + bar_spacing
-    for predator in predators:
-        if predator.is_active:
-            animal_name = predator.animal['name']
+            # Dessin de l'image de l'animal
+            animal_name = player.animal['name']
             if animal_name in ANIMAL_IMAGES:
-                img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['small'], (img_size, img_size))
-                img_y_pos = y_offset_pred + (bar_height - img.get_height()) / 2
-                screen.blit(img, (pred_rect.right - bar_width - img.get_width() - img_padding, img_y_pos))
+                img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['source'], (img_size, img_size))
+                screen.blit(img, (img_x_pos, img_y_pos))
             
-            wac_ratio = predator.Wac / predator.stats['WacMax'] if predator.stats.get('WacMax', 0) > 0 else 0
-            wac_ratio = min(1.0, max(0.0, wac_ratio))
-            
-            bar_y = y_offset_pred
-            bar_x = pred_rect.right - bar_width
-            
-            pygame.draw.rect(screen, (40, 40, 40), (bar_x, bar_y, bar_width, bar_height))
-            remaining_wac_width = bar_width * (1 - wac_ratio)
-            pygame.draw.rect(screen, predator.color, (bar_x, bar_y, remaining_wac_width, bar_height))
-            pygame.draw.rect(screen, settings.WHITE, (bar_x, bar_y, bar_width, bar_height), 1)
-            y_offset_pred += bar_height + bar_spacing
+            # Dessin de la barre de Wac
+            wac_bg_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
+            pygame.draw.rect(screen, (40, 40, 40), wac_bg_rect)
 
-    y_offset_prey = prey_rect.bottom + bar_spacing
-    for prey in preys:
-        if prey.is_active:
-            animal_name = prey.animal['name']
-            if animal_name in ANIMAL_IMAGES:
-                img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['small'], (img_size, img_size))
-                img_y_pos = y_offset_prey + (bar_height - img.get_height())/2
-                screen.blit(img, (prey_rect.left + bar_width + img_padding, img_y_pos))
-
-            wac_ratio = prey.Wac / prey.stats['WacMax'] if prey.stats.get('WacMax', 0) > 0 else 0
-            wac_ratio = min(1.0, max(0.0, wac_ratio))
-
-            bar_y = y_offset_prey
-            bar_x = prey_rect.left
+            if align_right: # Proies
+                wac_fg_rect = pygame.Rect(wac_bg_rect.right - fg_wac_width, bar_y, fg_wac_width, bar_height)
+            else: # Prédateurs
+                wac_fg_rect = pygame.Rect(bar_x, bar_y, fg_wac_width, bar_height)
             
-            pygame.draw.rect(screen, (40, 40, 40), (bar_x, bar_y, bar_width, bar_height))
-            remaining_wac_width = bar_width * (1 - wac_ratio)
-            pygame.draw.rect(screen, prey.color, (bar_x, bar_y, remaining_wac_width, bar_height))
-            pygame.draw.rect(screen, settings.WHITE, (bar_x, bar_y, bar_width, bar_height), 1)
-            y_offset_prey += bar_height + bar_spacing
+            pygame.draw.rect(screen, player.color, wac_fg_rect)
+            pygame.draw.rect(screen, settings.WHITE, wac_bg_rect, 1)
+
+    draw_wac_bars(predators, left_zone_rect, align_right=False)
+    draw_wac_bars(preys, right_zone_rect, align_right=True)
 
 
 def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, focus_level, cursor_pos):
