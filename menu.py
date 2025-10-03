@@ -13,6 +13,7 @@
 
 import pygame
 import settings
+import math
 from maps import generate_terrain
 from renderer import MapRenderer
 from ui import draw_menu
@@ -92,14 +93,15 @@ def menu_loop(screen, clock, gamepads, game_settings):
             
             if focus == 0:
                 if nav_y > 0 and last_nav_y == 0: player_focus[i] = 1
-                if nav_x != 0 and last_nav_x == 0:
-                    current_role = game_settings[f'p{i}_role']
-                    game_settings[f'p{i}_role'] = 'prey' if current_role == 'predator' else 'predator'
+                if nav_x > 0 and last_nav_x == 0:
+                    game_settings[f'p{i}_role'] = 'prey'
+                elif nav_x < 0 and last_nav_x == 0:
+                    game_settings[f'p{i}_role'] = 'predator'
 
             elif focus == 1:
-                if nav_y < 0 and last_nav_y == 0 and player_cursors[i] // 8 == 0: player_focus[i] = 0
+                if nav_y < 0 and last_nav_y == 0 and player_cursors[i] < len(ANIMALS) / 2: player_focus[i] = 0
                 else:
-                    icons_per_row = 8
+                    icons_per_row = math.ceil(len(ANIMALS) / 2)
                     cursor = player_cursors[i]
                     if nav_y != 0 and last_nav_y == 0:
                         new_cursor = cursor + (nav_y * icons_per_row)
