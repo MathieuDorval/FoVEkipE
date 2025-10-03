@@ -32,6 +32,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
     role_error_message = ""
     role_error_timer = 0.0
     is_first_frame = True
+    panel_rects = {}
 
     selected_map_name = game_settings['map_name']
     surface_data = generate_terrain(selected_map_name, settings.MAP_POINTS, settings.MAP_POINTS, game_settings)
@@ -47,7 +48,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
             if role_error_timer <= 0: role_error_message = ""
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: return False, 0
+            if event.type == pygame.QUIT: return False, 0, {}
 
         menu_actions = get_menu_inputs(gamepads)
         
@@ -62,7 +63,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
             if not is_first_frame: 
                 action = menu_settings_loop(screen, clock, gamepads, game_settings)
                 if action == "QUIT":
-                    return False, 0
+                    return False, 0, {}
 
         for i in range(1, 5):
             if menu_actions[f'p{i}_toggle_active'] and not last_inputs.get(f'p{i}_toggle_active', False):
@@ -151,7 +152,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
                 role_error_message = "Au moins une proie est requise !"; role_error_timer = 3.0
                 p_ready = {p: False for p in range(1, 5)}
             else:
-                 return True, map_rotation_angle
+                 return True, map_rotation_angle, panel_rects
 
         if game_settings['map_name'] != selected_map_name:
             selected_map_name = game_settings['map_name']
@@ -160,7 +161,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
             
         screen.fill(settings.BLACK)
         map_renderer.draw_map(map_rotation_angle, game_settings)
-        draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message)
+        panel_rects = draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message)
         pygame.display.flip()
 
-    return False, 0
+    return False, 0, {}

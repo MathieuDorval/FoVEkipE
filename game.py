@@ -20,8 +20,8 @@ from animals import ANIMALS
 from maps import generate_terrain
 from letsplay import game_loop
 from menu import menu_loop
-from datetime import datetime
 import logs
+from datetime import datetime
 
 def main():
     """
@@ -53,66 +53,50 @@ def main():
     }
     for i in range(1, 5):
         game_settings[f'p{i}_role'] = 'predator' if i == settings.PREDATOR_PLAYER else 'prey'
-    for i in range(1, 5):
         game_settings[f'p{i}_animal_name'] = getattr(settings, f'PLAYER{i}_ANIMAL')
         game_settings[f'p{i}_animal_index'] = animal_names.index(game_settings[f'p{i}_animal_name'])
-        is_ai = False
-        
         is_active = (i <= 2)
-        
-        if not is_active:
-            status = "INACTIVE"
-        else:
-            status = "AI" if is_ai else "PLAYER"
-        game_settings[f'p{i}_status'] = status
-
-    session_data = logs.init_session_log(len(gamepads))
+        game_settings[f'p{i}_status'] = "PLAYER" if is_active else "INACTIVE"
+    
+    session_log = logs.init_session_log(len(gamepads))
     
     running = True
     while running:
-        menu_result, map_rotation_angle = menu_loop(screen, clock, gamepads, game_settings)
+        menu_result, map_rotation_angle, panel_rects = menu_loop(screen, clock, gamepads, game_settings)
 
         if not menu_result:
             running = False
             continue
-
+        
         surface_data = generate_terrain(game_settings['map_name'], settings.MAP_POINTS, settings.MAP_POINTS, game_settings)
         game_settings['surface_data'] = surface_data
-        map_renderer = MapRenderer(screen, screen.get_rect(), surface_data, game_settings)
         
         players = []
-        
         active_player_ids = [i for i in range(1, 5) if game_settings[f'p{i}_status'] != "INACTIVE"]
 
         for i in active_player_ids:
-            player_id = i
-            animal_name = game_settings[f'p{i}_animal_name']
-            animal = next(a for a in ANIMALS if a["name"] == animal_name)
-            role = game_settings[f'p{i}_role']
-            is_ai = game_settings[f'p{i}_status'] == "AI"
-            
-            color = settings.PLAYER_COLORS[player_id][role]
-            
             player = Player(
-                id=player_id,
-                color=color,
-                animal_data=animal,
-                role=role,
-                is_ai=is_ai
+                id=i,
+                color=settings.PLAYER_COLORS[i][game_settings[f'p{i}_role']],
+                animal_data=next(a for a in ANIMALS if a["name"] == game_settings[f'p{i}_animal_name']),
+                role=game_settings[f'p{i}_role'],
+                is_ai=game_settings[f'p{i}_status'] == "AI"
             )
             players.append(player)
 
-        game_data = logs.add_game_to_log(session_data, game_settings, players)
+        game_data = logs.add_game_to_log(session_log, game_settings, players)
+        map_renderer = MapRenderer(screen, screen.get_rect(), surface_data, game_settings)
 
-        continue_game = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle)
+        continue_game = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle, panel_rects)
 
         if not continue_game:
             running = False
 
-    if session_data['games']:
-        logs.save_log_file(session_data)
+    if session_log['games']:
+        logs.save_log_file(session_log)
 
     pygame.quit()
 
 if __name__ == '__main__':
     main()
+

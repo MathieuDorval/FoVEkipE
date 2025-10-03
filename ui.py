@@ -8,7 +8,7 @@
 #   \ \ \_\ \  \ \ \  
 #    \ \_____\  \ \_\ 
 #     \/_____/   \/_/
-#   (version 14/09)
+#   (version 03/10)
 #   -> Manages the on-screen display
 
 import pygame
@@ -262,12 +262,14 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
     pred_x = screen_w * 0.25 - panel_width / 2
     prey_x = screen_w * 0.75 - panel_width / 2
     
+    panel_rects_to_return = {}
     for player_id in range(1, 5):
         if game_settings.get(f'p{player_id}_status', "INACTIVE") == "INACTIVE": continue
         y_pos = start_y + (player_id - 1) * (panel_height + v_spacing)
         role = game_settings.get(f'p{player_id}_role', 'prey')
         x_pos = pred_x if role == 'predator' else prey_x
         panel_rect = pygame.Rect(x_pos, y_pos, panel_width, panel_height)
+        panel_rects_to_return[player_id] = panel_rect
         draw_player_panel(screen, player_id, panel_rect, game_settings, p_ready.get(player_id, False), player_focus.get(player_id), player_cursors.get(player_id))
 
     if role_error_message:
@@ -277,6 +279,8 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
         bg_surf = pygame.Surface(bg_rect.size, pygame.SRCALPHA); bg_surf.fill((0, 0, 0, 180))
         screen.blit(bg_surf, bg_rect)
         screen.blit(error_text, error_text.get_rect(center=bg_rect.center))
+
+    return panel_rects_to_return
 
 def draw_settings_menu(screen, game_settings, selected_index, option_keys):
     font_title = pygame.font.Font(None, 50)

@@ -67,7 +67,7 @@ def check_collision(player1, player2, game_settings):
     collision_threshold = game_settings.get('map_width', settings.MAP_WIDTH_METERS) * settings.COLLISION_DISTANCE
     return distance < collision_threshold
 
-def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, initial_map_rotation):
+def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, initial_map_rotation, panel_rects):
     """
     Manage the entire game.
     """
@@ -75,14 +75,12 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     surface_data = game_settings['surface_data']
     
     scores = {p.id: 0 for p in players}
-    round_count = 0
     
     reset_players_positions(players, game_settings)
-    play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, game_settings)
+    play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, game_settings, panel_rects)
 
     game_over = False
     while not game_over:
-        round_count += 1
         
         round_data = logs.add_round_to_game(game_data, players)
         capture_events = []
