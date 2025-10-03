@@ -20,11 +20,10 @@ from killcam import play_killcam
 from ai import get_ai_inputs
 from transitions import play_start_transition, play_round_reset_transition
 import logs
-from datetime import datetime
 
 def reset_players_positions(players, game_settings):
     """
-    Place les proies et les prédateurs sur la map.
+    Place the prey and predators on the map.
     """
     map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
     half_map_width = map_width / 2
@@ -62,7 +61,7 @@ def reset_players_positions(players, game_settings):
 
 def check_collision(player1, player2, game_settings):
     """
-    Vérifie si les deux joueurs se touchent.
+    Check if the two players are touching.
     """
     distance = pygame.Vector2(player1.x, player1.y).distance_to(pygame.Vector2(player2.x, player2.y))
     collision_threshold = game_settings.get('map_width', settings.MAP_WIDTH_METERS) * settings.COLLISION_DISTANCE
@@ -70,7 +69,7 @@ def check_collision(player1, player2, game_settings):
 
 def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, initial_map_rotation):
     """
-    Gère la partie complète.
+    Manage the entire game.
     """
     map_rotation_angle = initial_map_rotation
     surface_data = game_settings['surface_data']
@@ -168,4 +167,3 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings)
     
     return True
-

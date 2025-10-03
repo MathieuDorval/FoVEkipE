@@ -93,7 +93,7 @@ ANIMALS_DATA = [
 
 def create_animal_from_data(data):
     """
-    Créer la structure qui contient les data des animaux.
+    Create the data structure to hold the animal data.
     """
     pre_stats = data["base_stats"].copy()
     stats = {}

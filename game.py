@@ -8,7 +8,7 @@
 #   \ \ \__ \  \ \  __ \  \ \ \-./\ \  \ \  __\   
 #    \ \_____\  \ \_\ \_\  \ \_\ \ \_\  \ \_____\ 
 #     \/_____/   \/_/\/_/   \/_/  \/_/   \/_____/
-#   (version 25/09)
+#   (version 03/10)
 #   -> Main game file
 
 import pygame
@@ -25,16 +25,14 @@ import logs
 
 def main():
     """
-    Initialise le jeu, gère la boucle principale (menu, jeu) et la sauvegarde des données.
+    Initialize the game, manage the main loop (menu, game).
     """
     pygame.init()
     
     if settings.FULLSCREEN:
-        # Utilise la résolution native de l'écran en mode plein écran pour éviter les barres noires
         screen_flags = pygame.FULLSCREEN
         screen = pygame.display.set_mode((0, 0), screen_flags)
     else:
-        # Utilise une fenêtre redimensionnable pour le mode fenêtré
         screen_flags = pygame.RESIZABLE
         screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT), screen_flags, vsync=1)
 

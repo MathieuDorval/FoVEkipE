@@ -18,7 +18,7 @@ import settings
 class MapRenderer:
     def __init__(self, screen, rect, map_data, game_settings):
         """
-        Initialise le rendu.
+        Set up the renderer.
         """
         self.screen = screen
         self.rect = rect
@@ -30,7 +30,7 @@ class MapRenderer:
         
     def _calculate_scale_and_offset(self):
         """
-        Calcul l'échelle et l'offset pour centrer la map.
+        Calculate the scale and offset to center the map.
         """
         map_width = self.game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         z_min, z_max = self.map_data.min(), self.map_data.max()
@@ -51,7 +51,7 @@ class MapRenderer:
 
     def update_map_data(self, new_map_data, game_settings):
         """
-        Met à jour les données de la carte.
+        Update the map data.
         """
         self.map_data = new_map_data
         self.game_settings = game_settings
@@ -61,7 +61,7 @@ class MapRenderer:
         
     def _project_isometric(self, x, y, z, angle):
         """
-        Projete un point 3d en 2d.
+        Project a 3D point onto 2D.
         """
         rotated_x = x * math.cos(angle) - y * math.sin(angle)
         rotated_y = x * math.sin(angle) + y * math.cos(angle)
@@ -73,7 +73,7 @@ class MapRenderer:
 
     def draw_map(self, rotation_angle, game_settings):
         """
-        Dessine la map à l'écran.
+        Draw the map to the screen.
         """
         if self.map_cache is not None and self.last_rendered_angle == rotation_angle:
             self.screen.blit(self.map_cache, self.rect.topleft)
@@ -115,7 +115,7 @@ class MapRenderer:
 
     def get_z(self, x, y):
         """
-        Obtenir le z d'un point sur la map.
+        Get the z of a point on the map.
         """
         map_width = self.game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         map_points = settings.MAP_POINTS
@@ -128,7 +128,7 @@ class MapRenderer:
 
     def draw_point(self, x, y, color, rotation_angle):
         """
-        Dessine les joueurs.
+        Draw the players.
         """
         z = self.get_z(x, y) + settings.PLAYER_Z_OFFSET
         screen_pos = self._project_isometric(x, y, z * settings.Z_BOOST_FACTOR, rotation_angle)
@@ -136,7 +136,7 @@ class MapRenderer:
 
     def draw_particle(self, x, y, z, color, alpha, rotation_angle):
         """
-        Dessine une particule.
+        Draw a particle.
         """
         screen_pos = self._project_isometric(x, y, z, rotation_angle)
         temp_surface = pygame.Surface((10, 10), pygame.SRCALPHA)

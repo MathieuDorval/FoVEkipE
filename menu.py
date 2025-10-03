@@ -22,10 +22,10 @@ from menu_settings import menu_settings_loop
 
 def menu_loop(screen, clock, gamepads, game_settings):
     """
-    Gère l'écran de menu principal.
+    Handle the main menu.
     """
     p_ready = {i: False for i in range(1, 5)}
-    player_focus = {i: 1 for i in range(1, 5)} # 0: role/status, 1: animal grid
+    player_focus = {i: 1 for i in range(1, 5)}
     player_cursors = {i: game_settings.get(f'p{i}_animal_index', 0) for i in range(1, 5)}
     last_inputs = {}
     map_rotation_angle = 0.0 
@@ -51,7 +51,6 @@ def menu_loop(screen, clock, gamepads, game_settings):
 
         menu_actions = get_menu_inputs(gamepads)
         
-        # --- Handle General Menu Actions ---
         if menu_actions['map_nav_y'] != 0 and last_inputs.get('map_nav_y', 0) == 0:
             direction = menu_actions['map_nav_y']
             game_settings['map_index'] = (game_settings['map_index'] + direction) % len(settings.AVAILABLE_MAPS)
@@ -63,11 +62,9 @@ def menu_loop(screen, clock, gamepads, game_settings):
             if not is_first_frame: 
                 action = menu_settings_loop(screen, clock, gamepads, game_settings)
                 if action == "QUIT":
-                    return False, 0 # Propagate quit signal to game.py main loop
+                    return False, 0
 
-        # --- Handle Player-Specific Actions ---
         for i in range(1, 5):
-            # --- Status cycling (must be first to activate players) ---
             if menu_actions[f'p{i}_toggle_active'] and not last_inputs.get(f'p{i}_toggle_active', False):
                 current_status = game_settings[f'p{i}_status']
                 if current_status == "INACTIVE":
@@ -78,7 +75,6 @@ def menu_loop(screen, clock, gamepads, game_settings):
                     game_settings[f'p{i}_status'] = "INACTIVE"
                 p_ready[i] = False
 
-            # --- Skip remaining logic for inactive players ---
             if game_settings[f'p{i}_status'] == "INACTIVE":
                 continue
 
@@ -86,22 +82,20 @@ def menu_loop(screen, clock, gamepads, game_settings):
             is_new_confirm = menu_actions[f'p{i}_confirm'] and not last_inputs.get(f'p{i}_confirm', False)
             focus = player_focus.get(i, 1)
 
-            # --- Player is locked if ready ---
             if is_human and p_ready.get(i, False):
-                if is_new_confirm: p_ready[i] = False # Un-ready
+                if is_new_confirm: p_ready[i] = False
                 continue
 
-            # --- Navigation and Selection ---
             nav_x, nav_y = menu_actions[f'p{i}_nav_x'], menu_actions[f'p{i}_nav_y']
             last_nav_x, last_nav_y = last_inputs.get(f'p{i}_nav_x', 0), last_inputs.get(f'p{i}_nav_y', 0)
             
-            if focus == 0: # Top panel (role/status)
+            if focus == 0:
                 if nav_y > 0 and last_nav_y == 0: player_focus[i] = 1
                 if nav_x != 0 and last_nav_x == 0:
                     current_role = game_settings[f'p{i}_role']
                     game_settings[f'p{i}_role'] = 'prey' if current_role == 'predator' else 'predator'
 
-            elif focus == 1: # Animal grid
+            elif focus == 1:
                 if nav_y < 0 and last_nav_y == 0 and player_cursors[i] // 8 == 0: player_focus[i] = 0
                 else:
                     icons_per_row = 8
@@ -114,21 +108,20 @@ def menu_loop(screen, clock, gamepads, game_settings):
                         new_cursor = cursor + nav_x
                         if 0 <= new_cursor < len(ANIMALS) and new_cursor // icons_per_row == row: player_cursors[i] = new_cursor
 
-            # --- Handle Confirm Button ---
             if is_new_confirm:
                 if is_human:
-                    if focus == 1: # Confirm animal
+                    if focus == 1:
                         game_settings[f'p{i}_animal_index'] = player_cursors[i]
                         game_settings[f'p{i}_animal_name'] = ANIMALS[player_cursors[i]]['name']
                         player_focus[i] = 0
-                    elif focus == 0: # Ready up
+                    elif focus == 0:
                         p_ready[i] = True
-                else: # Is AI
-                    if focus == 1: # Confirm animal
+                else:
+                    if focus == 1:
                         game_settings[f'p{i}_animal_index'] = player_cursors[i]
                         game_settings[f'p{i}_animal_name'] = ANIMALS[player_cursors[i]]['name']
                         player_focus[i] = 0
-                    elif focus == 0: # Try to launch game
+                    elif focus == 0:
                         human_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] == "PLAYER"]
                         current_active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
                         if not human_players and current_active_players and i == min(current_active_players):
@@ -137,16 +130,13 @@ def menu_loop(screen, clock, gamepads, game_settings):
         last_inputs = menu_actions.copy()
         is_first_frame = False
 
-        # --- Game Launch Logic ---
         human_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] == "PLAYER"]
         if human_players and all(p_ready.get(p, False) for p in human_players):
             should_launch = True
 
         if should_launch:
-            # Finalize all choices before launch
             final_active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
             for p_id in final_active_players:
-                # Ensure AI animal choices are saved if they didn't "confirm"
                 game_settings[f'p{p_id}_animal_index'] = player_cursors[p_id]
                 game_settings[f'p{p_id}_animal_name'] = ANIMALS[player_cursors[p_id]]['name']
 

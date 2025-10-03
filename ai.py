@@ -16,7 +16,7 @@ import settings
 
 def get_ai_inputs(player, all_players, game_settings):
     """
-    Détermine les commandes pour un joueur contrôlé par l'IA.
+    Define the commands for an AI player.
     """
     if player.role == 'predator':
         return get_predator_inputs(player, all_players, game_settings)
@@ -25,10 +25,10 @@ def get_ai_inputs(player, all_players, game_settings):
 
 def get_predator_inputs(predator, all_players, game_settings):
     """
-    Logique de l'IA pour le prédateur.
-    - HUNTING     -> se rapproche des proies à 60% de force max
-    - ATTACKING   -> fonce vers les proies à 100% de force max
-    - RECOVERING  -> récupère son wac si il est vidé à 90% (jusqu'à 60%)
+    AI Logic for the Predator.
+    - HUNTING → approaches prey at 60% of max force
+    - ATTACKING → rushes towards prey at 100% of max force
+    - RECOVERING → recovers its wac
     """
     preys = [p for p in all_players if p.role == 'prey' and p.is_active]
     if not preys:
@@ -72,10 +72,10 @@ def get_predator_inputs(predator, all_players, game_settings):
 
 def get_prey_inputs(prey, all_players, game_settings):
     """
-    Logique de l'IA pour la proie.
-    - IDLE      -> ne bouge pas si le prédateur est loin
-    - CAUTIOUS  -> s'éloigne lentement si le prédateur est à mi-distance
-    - FLEEING   -> fuit à 100% dee force max si le prédateur est proche, en évitant les bords
+    AI Logic for the Prey.
+    - IDLE → doesn't move if the predator is far away
+    - CAUTIOUS → moves away slowly if the predator is at mid-range
+    - FLEEING → flees at 100% of max force if the predator is close, while avoiding the edges
     """
     predators = [p for p in all_players if p.role == 'predator' and p.is_active]
     if not predators:

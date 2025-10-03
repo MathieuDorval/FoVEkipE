@@ -18,7 +18,7 @@ from ui import draw_settings_menu
 
 def menu_settings_loop(screen, clock, gamepads, game_settings):
     """
-    Gère le menu des paramètres.
+    Handle the settings menu.
     """
     options = {
         "Round Duration": "round_duration",
@@ -47,7 +47,6 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         if nav_y != 0 and last_nav_y == 0:
             selected_index = (selected_index - nav_y + len(option_keys)) % len(option_keys)
         
-        # --- Handle value changes with horizontal navigation ---
         if nav_x != 0 and last_nav_x == 0:
             key_to_change = options[option_keys[selected_index]]
             
@@ -67,13 +66,12 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
                 current_value = game_settings.get(key_to_change)
                 game_settings[key_to_change] = not current_value
 
-        # --- Handle select button press ---
         if menu_actions['open_settings'] and not last_select_button:
             selected_action = options[option_keys[selected_index]]
             if selected_action == "quit_game":
                 return "QUIT"
             else:
-                running = False # Close settings menu for any other option
+                running = False
         
         last_nav_y = nav_y
         last_nav_x = nav_x

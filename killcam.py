@@ -21,12 +21,9 @@ import copy
 from ui import draw_killcam_hud
 
 class Particle:
-    """
-    Classe d'une particule de l'explosion.
-    """
     def __init__(self, x, y, z, color):
         """
-        Création d'une particule, avec sa position, vitesse et couleur.
+        Creation of a particle, with its position, velocity, and color.
         """
         self.x, self.y, self.z = x, y, z
         angle = random.uniform(0, 2 * math.pi)
@@ -39,7 +36,7 @@ class Particle:
 
     def update(self, dt):
         """
-        Met à jours l'emplacement de la paricule en fonction de sa vitesse.
+        Update the particle's location based on its velocity.
         """
         self.x += self.vx * dt
         self.y += self.vy * dt
@@ -48,27 +45,23 @@ class Particle:
 
 def _find_closest_index(time_array, target_time):
     """
-    Trouve l'index le plus proche dans un tableau numpy.
+    Find the closest index in a NumPy array.
     """
     return np.argmin(np.abs(time_array - target_time))
 
 def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, round_winner_role, capture_events, game_settings):
     """
-    Affiche la killcam.
+    Display the killcam.
     """
     if not round_winner_role or round_winner_role == 'None':
-        # For prey victory by timeout, there might be no captures, which is fine.
-        # For predator victory, there must be captures.
         if round_winner_role == 'predator' and not capture_events:
             return {}
 
     round_key = f"round_{len(game_data['rounds'])}"
     round_data = game_data['rounds'][round_key]
     
-    # We work on a copy to avoid modifying the original log data (which are lists)
     frame_data = copy.deepcopy(round_data.get('frame_data', {}))
     
-    # Convert all lists to numpy arrays for processing
     for key, value in frame_data.items():
         if isinstance(value, list):
             frame_data[key] = np.array(value)
@@ -82,7 +75,6 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
     if time_data.size < 2:
         return {}
 
-    # VICTOIRE PREDATOR
     if round_winner_role == 'predator' and capture_events:
         MAX_FAST_PART_REAL_TIME = 3.0
         SLOW_MO_DURATION_GAME_TIME = 0.5
@@ -148,7 +140,6 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: pygame.quit(); return
 
-    # VICTOIRE PREY
     elif round_winner_role == 'prey':
         TRAIL_LENGTH = 8
         MAX_REPLAY_DURATION = 4.0
@@ -264,4 +255,3 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 final_positions[player_id] = {'x': pos_x, 'y': pos_y}
 
     return final_positions
-

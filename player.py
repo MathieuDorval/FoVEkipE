@@ -17,12 +17,9 @@ import math
 from physics import calculate_physics_update
 
 class Player:
-    """
-    Class pour un joueur.
-    """
     def __init__(self, id, color, animal_data, role, is_ai):
         """
-        Initialise le joueur et ses constantes.
+        Initialize the player and their constants.
         """
         self.id = id
         self.color = color
@@ -40,7 +37,7 @@ class Player:
         
     def get_current_slope(self, surface_data, game_settings):
         """
-        Calcule la pente actuelle sous le joueur.
+        Calculate the current gradient under the player.
         """
         map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         map_points = settings.MAP_POINTS
@@ -74,7 +71,7 @@ class Player:
     
     def get_current_z(self, surface_data, game_settings):
         """
-        Calcule l'altitude (z) du joueur.
+        Determine the player's elevation (z).
         """
         map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         map_points = settings.MAP_POINTS
@@ -89,7 +86,7 @@ class Player:
         
     def update(self, direction, intensity, dt, surface_data, game_settings):
         """
-        Met à jour le joueur.
+        Update the player state.
         """
         prev_x, prev_y = self.x, self.y
 

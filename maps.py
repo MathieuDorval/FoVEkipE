@@ -17,7 +17,7 @@ import settings
 
 def _find_max_slope(terrain, game_settings):
     """
-    Calcule la pente la plus raide d'une map.
+    Calculate the steepest slope of a map.
     """
     max_slope_found = 0
     width, height = terrain.shape
@@ -37,7 +37,7 @@ def _find_max_slope(terrain, game_settings):
 
 def _adjust_height_to_minimal(normalized_terrain):
     """
-    Ajuste les valeurs d'une map pour ramener la hauteur minimal d'une map à 0.
+    Adjust the map's values to set its minimum height to 0.
     """
     current_min_height = np.min(normalized_terrain)
     adjusted_normalized_terrain = normalized_terrain - current_min_height
@@ -45,7 +45,7 @@ def _adjust_height_to_minimal(normalized_terrain):
 
 def _adjust_height(normalized_terrain, game_settings):
     """
-    Modifie la hauteur d'une map pour respecter la hauteur et pente maxi.
+    Adjust the map's height to comply with the maximum height and slope limits.
     """
     map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
     current_max_height = map_width * settings.MAP_MAX_HEIGHT_RATIO
@@ -64,7 +64,7 @@ def _adjust_height(normalized_terrain, game_settings):
 
 def generate_noise_terrain(width, height, scale, octaves, persistence, lacunarity, seed):
     """
-    Génère une map avec du bruit de perlin, via les paramètres renseignés.
+    Generate a Perlin noise map based on the input parameters.
     """
     terrain = np.zeros((height, width))
     for y in range(height):
@@ -80,13 +80,13 @@ def generate_noise_terrain(width, height, scale, octaves, persistence, lacunarit
 
 def generate_flat_terrain(width, height):
     """
-    Génère une map entièrement plate. (map unique)
+    Create a perfectly flat map. (unique map)
     """
     return np.zeros((height, width))
 
 def generate_mountain_terrain(width, height):
     """
-    Génère une map avec une grosse montagne centrale. (map unique)
+    Generate a map with a high central peak. (unique map)
     """
     center_x, center_y = width // 2, height // 2
     x_vals, y_vals = np.meshgrid(np.arange(width), np.arange(height))
@@ -102,7 +102,7 @@ def generate_mountain_terrain(width, height):
 
 def generate_matlab_terrain(width, height):
     """
-    Génère la même map que celle Matlab initiale. (map unique)
+    Generate the initial MATLAB map. (unique map)
     """
     x = np.linspace(-3, 3, width)
     y = np.linspace(-3, 3, height)
@@ -115,19 +115,18 @@ def generate_matlab_terrain(width, height):
 
 def generate_terrain(map_name, width, height, game_settings):
     """
-    Génère la map demandé en fonction du nom.
-    pour ajouter une map, utiliser la fonction "generate_noise_terrain" en lui donnant les paramètres que l'on veut :
-    - largeur
-    - hauteur
-    - scale         (les détails, plus c'est petit plus c'est smooth)
-    - octave        (le nombre de fois que l'on repasse dessus, plus c'est grand plus c'est "anarchique")
-    - persistance   (la diff entre 2 octaves, plus c'est petit plus c'est smooth)
-    - lacunarity    (fréquence entre 2 octaves)
-    - seed          (gère l'aléatoire)
-    - facteur       (gère la hauteur max de la map par rapport à celle des settings)
+    Generate the requested map based on the name.
+    To add a map, use the function "generate_noise_terrain," providing it with the desired parameters:
+    - width
+    - height
+    - scale (details; the smaller it is, the smoother it is)
+    - octave (the number of times it's processed; the larger it is, the more "anarchic" it is)
+    - persistence (the difference between 2 octaves; the smaller it is, the smoother it is)
+    - lacunarity (frequency between 2 octaves)
+    - seed (manages randomness)
+    - factor (manages the map's maximum height relative to the height in the settings)
     """
     normalized_terrain = np.zeros((width, height))
-
     
     if map_name     == "Flat": normalized_terrain       = generate_flat_terrain(width, height)
     elif map_name   == "MatLab": normalized_terrain     = generate_matlab_terrain(width, height)
