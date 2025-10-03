@@ -16,6 +16,7 @@ import settings
 from animals import ANIMALS
 from commands import get_confirm_action
 import math
+from language import get_text
 
 ANIMAL_IMAGES = {}
 
@@ -144,7 +145,6 @@ def draw_game_info(screen, scores, round_time, players, round_duration):
 
 def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, focus_level, cursor_pos):
     font_large = pygame.font.Font(None, 32)
-    font_small = pygame.font.Font(None, 24)
     
     status = game_settings.get(f'p{player_id}_status', "INACTIVE")
     role = game_settings.get(f'p{player_id}_role', 'prey')
@@ -164,8 +164,8 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
     preview_rect = pygame.Rect(bottom_rect.left, bottom_rect.top, bottom_rect.width * 0.33, bottom_rect.height)
     grid_rect = pygame.Rect(preview_rect.right, bottom_rect.top, bottom_rect.width * 0.67, bottom_rect.height)
 
-    title_str = f"Player {player_id}"
-    if status == "AI": title_str += " (AI)"
+    title_str = f"{get_text('player_label')} {player_id}"
+    if status == "AI": title_str += f" ({get_text('ai_label')})"
     title_surf = font_large.render(title_str, True, settings.WHITE)
     title_pos = title_surf.get_rect(center=top_rect.center)
     screen.blit(title_surf, title_pos)
@@ -190,7 +190,9 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
 
         source_img = ANIMAL_IMAGES[preview_animal['name']]['source']
         scaled_preview_img = pygame.transform.scale(source_img, (preview_img_size, preview_img_size))
-        name_surf = font_animal_name.render(preview_animal['name'], True, settings.WHITE)
+        
+        translated_name = get_text(preview_animal['name'])
+        name_surf = font_animal_name.render(translated_name, True, settings.WHITE)
         
         total_h = scaled_preview_img.get_height() + 5 + name_surf.get_height()
         start_y = preview_rect.centery - total_h / 2
@@ -233,12 +235,12 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
         overlay.fill((0, 0, 0, 120))
         screen.blit(overlay, base_rect.topleft)
         font_ready = pygame.font.Font(None, 60)
-        text_surf = font_ready.render("READY", True, (100, 255, 100))
+        text_surf = font_ready.render(get_text('ready_label').upper(), True, (100, 255, 100))
         text_rect = text_surf.get_rect(center=base_rect.center)
         screen.blit(text_surf, text_rect)
 
 
-def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message=""):
+def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message="", num_gamepads=0):
     load_animal_images()
     font_large = pygame.font.Font(None, 74)
     font_role_title = pygame.font.Font(None, 48)
@@ -247,8 +249,8 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
     title_rect = title_text.get_rect(midtop=(screen.get_width() // 2, 10))
     screen.blit(title_text, title_rect)
 
-    predator_title = font_role_title.render("PREDATORS", True, settings.COLOR_PREDATOR)
-    prey_title = font_role_title.render("PREYS", True, settings.COLOR_PREY)
+    predator_title = font_role_title.render(get_text('predators_label').upper(), True, settings.COLOR_PREDATOR)
+    prey_title = font_role_title.render(get_text('preys_label').upper(), True, settings.COLOR_PREY)
     pred_title_rect = predator_title.get_rect(centerx=screen.get_width() * 0.25, y=title_rect.bottom + 15)
     prey_title_rect = prey_title.get_rect(centerx=screen.get_width() * 0.75, y=title_rect.bottom + 15)
     screen.blit(predator_title, pred_title_rect)
@@ -282,7 +284,7 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
 
     return panel_rects_to_return
 
-def draw_settings_menu(screen, game_settings, selected_index, option_keys, num_gamepads):
+def draw_settings_menu(screen, game_settings, selected_index, option_keys, key_map, num_gamepads):
     font_title = pygame.font.Font(None, 50)
     font_option = pygame.font.Font(None, 36)
     
@@ -290,49 +292,47 @@ def draw_settings_menu(screen, game_settings, selected_index, option_keys, num_g
     overlay.fill((0, 0, 0, 200))
     screen.blit(overlay, (0, 0))
     
-    title_text = font_title.render("Game Settings", True, settings.WHITE)
+    title_text = font_title.render(get_text('settings_title'), True, settings.WHITE)
     title_rect = title_text.get_rect(centerx=screen.get_width() // 2, y=50)
     screen.blit(title_text, title_rect)
     
-    options = {
-        "Round Duration": f"{game_settings.get('round_duration', 30)}s",
-        "Winning Score": f"{game_settings.get('winning_score', 3)}",
-        "Map Width": f"{game_settings.get('map_width', 15)}m",
-        "Wac Ratio": f"{game_settings.get('wac_ratio', 1.0):.1f}",
-        "VC Speed": "On" if game_settings.get('vc_speed') else "Off",
-        "Infinity Map": "On" if game_settings.get('infinity_map') else "Off",
-        "Vibration Mode": "On" if game_settings.get('vibration_mode') else "Off",
-        "Slope Correction": "On" if game_settings.get('slope_correction') else "Off",
-        "Brake Correction": "On" if game_settings.get('brake_correction') else "Off",
-        "AI": "On" if game_settings.get('ai_enabled') else "Off",
-        "Quit Game": ""
+    options_values = {
+        "language": f"{'English' if game_settings.get('language') == 'en' else 'Français'}",
+        "round_duration": f"{game_settings.get('round_duration', 30)}s",
+        "winning_score": f"{game_settings.get('winning_score', 3)}",
+        "map_width": f"{game_settings.get('map_width', 15)}m",
+        "wac_ratio": f"{game_settings.get('wac_ratio', 1.0):.1f}",
+        "slope_correction": get_text('on_label') if game_settings.get('slope_correction') else get_text('off_label'),
+        "brake_correction": get_text('on_label') if game_settings.get('brake_correction') else get_text('off_label'),
+        "vc_speed": get_text('on_label') if game_settings.get('vc_speed') else get_text('off_label'),
+        "infinity_map": get_text('on_label') if game_settings.get('infinity_map') else get_text('off_label'),
+        "vibration_mode": get_text('on_label') if game_settings.get('vibration_mode') else get_text('off_label'),
+        "ai_enabled": get_text('on_label') if game_settings.get('ai_enabled') else get_text('off_label'),
+        "quit_game": ""
     }
     
-    for i, key in enumerate(option_keys):
-        value = options.get(key, '')
+    for i, key_label in enumerate(option_keys):
+        key = key_map[key_label]
+        value = options_values[key]
         
-        is_disabled = False
-        display_text = ""
-
-        if key == "Vibration Mode" and num_gamepads < 2:
-            is_disabled = True
-            display_text = f"{key}: (Requiert 2+ manettes)"
-        elif key == "Quit Game":
-            display_text = key
+        text_label = get_text(key_label)
+        
+        if key == "quit_game":
+            option_text = text_label
         else:
-            display_text = f"{key}: {value}"
+            option_text = f"{text_label}: {value}"
             
-        color = (255, 255, 100) if i == selected_index and not is_disabled else settings.WHITE
-        if is_disabled:
+        color = (255, 255, 100) if i == selected_index else settings.WHITE
+        if key == "vibration_mode" and num_gamepads < 2:
             color = (100, 100, 100)
-        elif key == "Quit Game":
+        elif key == "quit_game":
             color = (255, 100, 100) if i == selected_index else (200, 50, 50)
             
-        text_surf = font_option.render(display_text, True, color)
-        text_rect = text_surf.get_rect(centerx=screen.get_width() // 2, y=150 + i * 45)
+        text_surf = font_option.render(option_text, True, color)
+        text_rect = text_surf.get_rect(centerx=screen.get_width() // 2, y=150 + i * 50)
         screen.blit(text_surf, text_rect)
         
-    help_text = font_option.render("Press Select to close", True, (150, 150, 150))
+    help_text = font_option.render(get_text('settings_close_prompt'), True, (150, 150, 150))
     help_rect = help_text.get_rect(centerx=screen.get_width() // 2, bottom=screen.get_height() - 40)
     screen.blit(help_text, help_rect)
 
@@ -348,20 +348,20 @@ def draw_game_over_screen(screen, clock, gamepads, players, scores, game_setting
     preys_final_score = scores.get(preys[0].id, 0) if preys else 0
     winning_score = game_settings.get('winning_score', 3)
 
-    winner_text_str = "EQUALITY"
+    winner_text_str = get_text('equality_label').upper()
     winner_color = settings.WHITE
     if predators_final_score >= winning_score:
-        winner_text_str = "PREDATORS WIN!" if len(predators) > 1 else "PREDATOR WINS!"
+        winner_text_str = get_text('predators_win_label').upper() if len(predators) > 1 else get_text('predator_wins_label').upper()
         winner_color = settings.COLOR_PREDATOR
     elif preys_final_score >= winning_score:
-        winner_text_str = "PREYS WIN!" if len(preys) > 1 else "PREY WINS!"
+        winner_text_str = get_text('preys_win_label').upper() if len(preys) > 1 else get_text('prey_wins_label').upper()
         winner_color = (settings.COLOR_PREY)
 
     winner_text = font_winner.render(winner_text_str, True, winner_color)
-    score_text_str = f"Predators : {predators_final_score}   |   Preys : {preys_final_score}"
+    score_text_str = f"{get_text('predators_label')} : {predators_final_score}   |   {get_text('preys_label')} : {preys_final_score}"
     score_text = font_score.render(score_text_str, True, settings.WHITE)
     
-    prompt_string = "Press SPACE to return to the menu" if not gamepads else "Press RT or LT to return to the menu"
+    prompt_string = get_text('return_to_menu_prompt_keyboard') if not gamepads else get_text('return_to_menu_prompt_gamepad')
     prompt_text = font_prompt.render(prompt_string, True, (200, 200, 200))
 
     winner_rect = winner_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 - 50))
@@ -400,4 +400,3 @@ def draw_killcam_hud(screen, top_text, bottom_text, bottom_text_color):
     bg_surf.fill((0, 0, 0, 150))
     screen.blit(bg_surf, bg_rect)
     screen.blit(bottom_surf, bottom_rect)
-

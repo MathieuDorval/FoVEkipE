@@ -19,6 +19,7 @@ import numpy as np
 import copy
 
 from ui import draw_killcam_hud
+from language import get_text
 
 class Particle:
     def __init__(self, x, y, z, color):
@@ -134,7 +135,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 p.update(dt)
                 if p.lifespan > 0: map_renderer.draw_particle(p.x, p.y, p.z, p.color, int(p.lifespan * 255), map_rotation_angle)
             all_particles = [p for p in all_particles if p.lifespan > 0]
-            draw_killcam_hud(screen, "Killcam", "Catch!", (255, 50, 50))
+            draw_killcam_hud(screen, get_text('killcam_label'), get_text('catch_label'), (255, 50, 50))
             pygame.display.flip()
             if real_time_elapsed >= total_killcam_duration and not all_particles: running = False
             for event in pygame.event.get():
@@ -198,7 +199,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 if p.lifespan > 0: map_renderer.draw_particle(p.x, p.y, p.z, p.color, int(p.lifespan * 255), map_rotation_angle)
             all_particles = [p for p in all_particles if p.lifespan > 0]
             
-            draw_killcam_hud(screen, "Killcam", "Escape!", (50, 255, 50))
+            draw_killcam_hud(screen, get_text('killcam_label'), get_text('escape_label'), (50, 255, 50))
             pygame.display.flip()
             if real_time_elapsed >= total_replay_duration: running_replay = False
             for event in pygame.event.get():
@@ -226,7 +227,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 p.update(dt)
                 if p.lifespan > 0: map_renderer.draw_particle(p.x, p.y, p.z, p.color, int(p.lifespan * 255), map_rotation_angle)
             all_particles = [p for p in all_particles if p.lifespan > 0]
-            draw_killcam_hud(screen, "Killcam", "Escape!", (50, 255, 50))
+            draw_killcam_hud(screen, get_text('killcam_label'), get_text('escape_label'), (50, 255, 50))
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: pygame.quit(); return

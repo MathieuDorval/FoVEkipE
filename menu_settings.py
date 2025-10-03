@@ -15,25 +15,42 @@ import pygame
 import settings
 from commands import get_menu_inputs
 from ui import draw_settings_menu
+from language import get_text, set_language
 
 def menu_settings_loop(screen, clock, gamepads, game_settings):
     """
     Handle the settings menu.
     """
-    options = {
-        "Round Duration": "round_duration",
-        "Winning Score": "winning_score",
-        "Map Width": "map_width",
-        "Wac Ratio": "wac_ratio",
-        "VC Speed": "vc_speed",
-        "Infinity Map": "infinity_map",
-        "Vibration Mode": "vibration_mode",
-        "Slope Correction": "slope_correction",
-        "Brake Correction": "brake_correction",
-        "AI": "ai_enabled",
-        "Quit Game": "quit_game"
+    option_keys = [
+        "language_label",
+        "round_duration_label",
+        "winning_score_label",
+        "map_width_label",
+        "wac_ratio_label",
+        "slope_correction_label",
+        "brake_correction_label",
+        "vc_speed_label",
+        "infinity_map_label",
+        "vibration_mode_label",
+        "ai_label",
+        "quit_game_label"
+    ]
+    
+    key_map = {
+        "language_label": "language",
+        "round_duration_label": "round_duration",
+        "winning_score_label": "winning_score",
+        "map_width_label": "map_width",
+        "wac_ratio_label": "wac_ratio",
+        "slope_correction_label": "slope_correction",
+        "brake_correction_label": "brake_correction",
+        "vc_speed_label": "vc_speed",
+        "infinity_map_label": "infinity_map",
+        "vibration_mode_label": "vibration_mode",
+        "ai_label": "ai_enabled",
+        "quit_game_label": "quit_game"
     }
-    option_keys = list(options.keys())
+
     selected_index = 0
     
     last_nav_y = 0
@@ -52,9 +69,14 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
             selected_index = (selected_index - nav_y + len(option_keys)) % len(option_keys)
         
         if nav_x != 0 and last_nav_x == 0:
-            key_to_change = options[option_keys[selected_index]]
+            key_to_change = key_map[option_keys[selected_index]]
             
-            if key_to_change == "round_duration":
+            if key_to_change == "language":
+                current_lang = game_settings.get('language', 'fr')
+                new_lang = 'en' if current_lang == 'fr' else 'fr'
+                game_settings['language'] = new_lang
+                set_language(new_lang)
+            elif key_to_change == "round_duration":
                 current_value = game_settings.get(key_to_change)
                 new_value = current_value + nav_x * 5
                 game_settings[key_to_change] = max(5, min(90, new_value))
@@ -67,19 +89,21 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
                 new_value = current_value + nav_x
                 game_settings[key_to_change] = max(5, min(100, new_value))
             elif key_to_change == "wac_ratio":
-                current_value = game_settings.get(key_to_change)
+                current_value = game_settings.get(key_to_change, 1.0)
                 new_value = round(current_value + nav_x * 0.2, 1)
                 game_settings[key_to_change] = max(0.0, min(10.0, new_value))
-            elif key_to_change == "vibration_mode":
-                if len(gamepads) >= 2:
-                    current_value = game_settings.get(key_to_change)
-                    game_settings[key_to_change] = not current_value
             elif key_to_change in ["slope_correction", "brake_correction", "ai_enabled", "vc_speed", "infinity_map"]:
                 current_value = game_settings.get(key_to_change)
                 game_settings[key_to_change] = not current_value
+            elif key_to_change == "vibration_mode":
+                num_gamepads = len(gamepads)
+                if num_gamepads >= 2:
+                    current_value = game_settings.get(key_to_change)
+                    game_settings[key_to_change] = not current_value
+
 
         if menu_actions['open_settings'] and not last_select_button:
-            selected_action = options[option_keys[selected_index]]
+            selected_action = key_map[option_keys[selected_index]]
             if selected_action == "quit_game":
                 return "QUIT"
             else:
@@ -90,9 +114,8 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         last_select_button = menu_actions['open_settings']
         
         screen.fill(settings.BLACK)
-        draw_settings_menu(screen, game_settings, selected_index, option_keys, len(gamepads))
+        draw_settings_menu(screen, game_settings, selected_index, option_keys, key_map, len(gamepads))
         pygame.display.flip()
         clock.tick(settings.FPS)
     
     return None
-

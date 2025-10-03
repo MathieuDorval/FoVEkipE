@@ -36,22 +36,22 @@ def calculate_physics_update(player, direction_vector, intensity, dt, slope_angl
     V0c         = stats.get('V0c', 1) 
     WacMax      = stats.get('WacMax', 1)
     Fbrake      = stats.get('Fbrake', 0) if game_settings.get('brake_correction', True) else 0
-    wac_ratio   = game_settings.get('wac_ratio', 1.0)
-    vc_speed_enabled = game_settings.get('vc_speed', False)
-
-    is_jogging = vc_speed_enabled and intensity == 0 and direction_vector.length_squared() > 0
+    wac_ratio_setting = game_settings.get('wac_ratio', 1.0)
+    
+    use_vc_speed = game_settings.get('vc_speed', False) and intensity == 0 and direction_vector.length_squared() > 0
 
     Fi = F0i * (1 - current_speed / V0i) if V0i > 0 else 0
     Fc = F0c * (1 - current_speed / V0c) if V0c > 0 else 0
     
-    wac_ratio_interne = (current_wac / WacMax) if WacMax > 0 else 0
+    wac_ratio = (current_wac / WacMax) if WacMax > 0 else 0
+    Fmax = Fi - (Fi - Fc) * wac_ratio
     
-    if is_jogging:
+    Fr = 0
+    if use_vc_speed:
         Fr = Fc
     else:
-        Fmax = Fi - (Fi - Fc) * wac_ratio_interne
         Fr = Fmax * intensity
-    
+
     propulsion_force = pygame.Vector2(0, 0)
     if direction_vector.length_squared() > 0:
         propulsion_force = direction_vector.normalize() * Fr
@@ -71,15 +71,14 @@ def calculate_physics_update(player, direction_vector, intensity, dt, slope_angl
 
         drag_magnitude = k * (current_speed ** 2)
 
-        if intensity == 0 and not is_jogging:
+        if intensity == 0 and not use_vc_speed:
             braking_force_magnitude = Fbrake + Ff + drag_magnitude
             if braking_force_magnitude * dt > current_speed * m:
                 new_velocity = pygame.Vector2(0, 0)
-                acceleration = -current_velocity / dt
+                acceleration = -current_velocity / dt if dt > 0 else pygame.Vector2(0,0)
                 Vc = V0c * (1 - Fr / F0c) if F0c > 0 else 0
                 dWac = (new_velocity.length() - Vc) * dt
-                if dWac != 0:
-                    dWac *= wac_ratio
+                if dWac < 0: dWac *= wac_ratio_setting
                 new_wac = min(WacMax, max(0, current_wac + dWac))
                 return new_velocity, new_wac, acceleration
 
@@ -101,14 +100,18 @@ def calculate_physics_update(player, direction_vector, intensity, dt, slope_angl
     new_velocity = current_velocity + acceleration * dt
     
     Vc = V0c * (1 - Fr / F0c) if F0c > 0 else 0
-    dWac = (new_velocity.length() - Vc) * dt
     
-    if is_jogging and dWac > 0:
+    dWac = 0
+    if use_vc_speed:
         dWac = 0
     else:
-        dWac *= wac_ratio
-        
+        dWac = (new_velocity.length() - Vc) * dt
+
+    if dWac > 0 :
+        dWac *= wac_ratio_setting
+    elif dWac < 0:
+        dWac /= wac_ratio_setting if wac_ratio_setting > 0 else 1
+
     new_wac = min(WacMax, max(0, current_wac + dWac))
     
     return new_velocity, new_wac, acceleration
-

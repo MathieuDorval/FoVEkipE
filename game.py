@@ -22,6 +22,7 @@ from letsplay import game_loop
 from menu import menu_loop
 import logs
 from datetime import datetime
+from language import set_language
 
 def main():
     """
@@ -47,14 +48,17 @@ def main():
         'round_duration': settings.ROUND_DURATION,
         'winning_score': settings.WINNING_SCORE,
         'map_width': settings.MAP_WIDTH_METERS,
+        'wac_ratio': settings.WAC_RATIO,
         'slope_correction': settings.SLOPE_CORRECTION,
         'brake_correction': settings.BRAKE_CORRECTION,
-        'ai_enabled': settings.AI_ENABLED,
-        'wac_ratio': settings.WAC_RATIO,
         'vc_speed': settings.VC_SPEED,
         'infinity_map': settings.INFINITY_MAP,
         'vibration_mode': settings.VIBRATION_MODE,
+        'ai_enabled': settings.AI_ENABLED,
+        'language': settings.LANGUAGE,
     }
+    set_language(game_settings['language'])
+
     for i in range(1, 5):
         game_settings[f'p{i}_role'] = 'predator' if i == settings.PREDATOR_PLAYER else 'prey'
         game_settings[f'p{i}_animal_name'] = getattr(settings, f'PLAYER{i}_ANIMAL')
@@ -71,6 +75,8 @@ def main():
         if not menu_result:
             running = False
             continue
+        
+        set_language(game_settings['language'])
         
         surface_data = generate_terrain(game_settings['map_name'], settings.MAP_POINTS, settings.MAP_POINTS, game_settings)
         game_settings['surface_data'] = surface_data
@@ -103,4 +109,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

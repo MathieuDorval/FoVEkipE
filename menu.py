@@ -19,6 +19,7 @@ from ui import draw_menu
 from animals import ANIMALS
 from commands import get_menu_inputs
 from menu_settings import menu_settings_loop
+from language import get_text
 
 def menu_loop(screen, clock, gamepads, game_settings):
     """
@@ -69,11 +70,6 @@ def menu_loop(screen, clock, gamepads, game_settings):
             if menu_actions[f'p{i}_toggle_active'] and not last_inputs.get(f'p{i}_toggle_active', False):
                 current_status = game_settings[f'p{i}_status']
                 if current_status == "INACTIVE":
-                    if game_settings.get('vibration_mode', False):
-                        num_active = len([p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"])
-                        if num_active >= len(gamepads):
-                            role_error_message = "Vibration: 1 joueur par manette !"; role_error_timer = 3.0
-                            continue
                     game_settings[f'p{i}_status'] = "PLAYER"
                 elif current_status == "PLAYER" and game_settings['ai_enabled']:
                     game_settings[f'p{i}_status'] = "AI"
@@ -98,8 +94,10 @@ def menu_loop(screen, clock, gamepads, game_settings):
             if focus == 0:
                 if nav_y > 0 and last_nav_y == 0: player_focus[i] = 1
                 if nav_x != 0 and last_nav_x == 0:
-                    current_role = game_settings[f'p{i}_role']
-                    game_settings[f'p{i}_role'] = 'prey' if current_role == 'predator' else 'predator'
+                    if nav_x > 0:
+                        game_settings[f'p{i}_role'] = 'prey'
+                    elif nav_x < 0:
+                        game_settings[f'p{i}_role'] = 'predator'
 
             elif focus == 1:
                 if nav_y < 0 and last_nav_y == 0 and player_cursors[i] // 8 == 0: player_focus[i] = 0
@@ -142,27 +140,29 @@ def menu_loop(screen, clock, gamepads, game_settings):
 
         if should_launch:
             final_active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
+            for p_id in final_active_players:
+                game_settings[f'p{p_id}_animal_index'] = player_cursors[p_id]
+                game_settings[f'p{p_id}_animal_name'] = ANIMALS[player_cursors[p_id]]['name']
+
+            roles = [game_settings[f'p{p}_role'] for p in final_active_players]
             
-            if game_settings.get('vibration_mode', False) and len(final_active_players) > len(gamepads):
-                role_error_message = "Vibration: 1 joueur par manette !"; role_error_timer = 3.0
+            error = False
+            if len(final_active_players) < 2:
+                role_error_message = get_text('error_min_2_players'); error = True
+            elif 'predator' not in roles:
+                role_error_message = get_text('error_min_1_predator'); error = True
+            elif 'prey' not in roles:
+                role_error_message = get_text('error_min_1_prey'); error = True
+            elif game_settings['vibration_mode']:
+                num_human_players = len([p for p in final_active_players if game_settings[f'p{p}_status'] == 'PLAYER'])
+                if num_human_players > len(gamepads):
+                    role_error_message = get_text('error_vibration_mode'); error = True
+
+            if error:
+                role_error_timer = 3.0
                 p_ready = {p: False for p in range(1, 5)}
             else:
-                for p_id in final_active_players:
-                    game_settings[f'p{p_id}_animal_index'] = player_cursors[p_id]
-                    game_settings[f'p{p_id}_animal_name'] = ANIMALS[player_cursors[p_id]]['name']
-
-                roles = [game_settings[f'p{p}_role'] for p in final_active_players]
-                if len(final_active_players) < 2:
-                    role_error_message = "Au moins 2 joueurs sont requis !"; role_error_timer = 3.0
-                    p_ready = {p: False for p in range(1, 5)}
-                elif 'predator' not in roles:
-                    role_error_message = "Au moins un prédateur est requis !"; role_error_timer = 3.0
-                    p_ready = {p: False for p in range(1, 5)}
-                elif 'prey' not in roles:
-                    role_error_message = "Au moins une proie est requise !"; role_error_timer = 3.0
-                    p_ready = {p: False for p in range(1, 5)}
-                else:
-                     return True, map_rotation_angle, panel_rects
+                 return True, map_rotation_angle, panel_rects
 
         if game_settings['map_name'] != selected_map_name:
             selected_map_name = game_settings['map_name']
@@ -171,7 +171,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
             
         screen.fill(settings.BLACK)
         map_renderer.draw_map(map_rotation_angle, game_settings)
-        panel_rects = draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message)
+        panel_rects = draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message, len(gamepads))
         pygame.display.flip()
 
     return False, 0, {}

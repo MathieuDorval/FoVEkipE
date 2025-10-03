@@ -34,7 +34,7 @@ class Player:
         self.acceleration = pygame.Vector2(0, 0)
         self.Wac = 0.0
         self.slope = 0.0
-        self.last_direction = pygame.Vector2(0, -1)
+        self.last_direction = pygame.Vector2(1, 0)
         
     def get_current_slope(self, surface_data, game_settings):
         """
@@ -89,10 +89,10 @@ class Player:
         """
         Update the player state.
         """
-        if direction.length_squared() > 0:
-            self.last_direction = direction.copy()
-            
         prev_x, prev_y = self.x, self.y
+
+        if direction.length_squared() > 0:
+            self.last_direction = direction.normalize()
 
         slope = self.get_current_slope(surface_data, game_settings)
         self.slope = slope
@@ -111,16 +111,13 @@ class Player:
         
         map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         half_map_width = map_width / 2
-        infinity_map_enabled = game_settings.get('infinity_map', False)
-
-        if infinity_map_enabled:
-            if self.x > half_map_width: self.x -= map_width
-            elif self.x < -half_map_width: self.x += map_width
-            
-            if self.y > half_map_width: self.y -= map_width
-            elif self.y < -half_map_width: self.y += map_width
+        
+        if game_settings.get('infinity_map', False):
+            if self.x > half_map_width: self.x = -half_map_width
+            elif self.x < -half_map_width: self.x = half_map_width
+            if self.y > half_map_width: self.y = -half_map_width
+            elif self.y < -half_map_width: self.y = half_map_width
         else:
             if abs(self.x) > half_map_width or abs(self.y) > half_map_width:
                 self.x, self.y = prev_x, prev_y
                 self.velocity = pygame.Vector2(0, 0)
-

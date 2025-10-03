@@ -12,8 +12,8 @@
 #   -> Manages map generation and selection
 
 import numpy as np
-import noise
 import settings
+from perlin_noise import PerlinNoise
 
 def _find_max_slope(terrain, game_settings):
     """
@@ -62,21 +62,19 @@ def _adjust_height(normalized_terrain, game_settings):
     adjusted_normalized_terrain = _adjust_height_to_minimal(normalized_terrain)
     return adjusted_normalized_terrain * current_max_height    
 
-def generate_noise_terrain(width, height, scale, octaves, persistence, lacunarity, seed):
+def generate_noise_terrain(width, height, scale, octaves, seed):
     """
     Generate a Perlin noise map based on the input parameters.
     """
+    noise_gen = PerlinNoise(octaves=octaves, seed=seed)
     terrain = np.zeros((height, width))
     for y in range(height):
         for x in range(width):
-            nx, ny = x / width - 0.5, y / height - 0.5
-            noise_value = noise.pnoise2(nx * scale, ny * scale,
-                octaves=octaves, persistence=persistence, lacunarity=lacunarity,
-                repeatx=1024, repeaty=1024, base=seed)
-            terrain[y, x] = noise_value
-    
+            terrain[y][x] = noise_gen([x / scale, y / scale])
+            
     min_val, max_val = np.min(terrain), np.max(terrain)
     return (terrain - min_val) / (max_val - min_val) if (max_val - min_val) > 0 else terrain
+
 
 def generate_flat_terrain(width, height):
     """
@@ -92,10 +90,13 @@ def generate_mountain_terrain(width, height):
     x_vals, y_vals = np.meshgrid(np.arange(width), np.arange(height))
     dist = np.sqrt((x_vals - center_x)**2 + (y_vals - center_y)**2)
     mountain_shape = np.maximum(0, 1 - (dist / (width / 2))**2)
+    
+    noise_gen = PerlinNoise(octaves=3, seed=20)
     noise_vals = np.zeros((height, width))
     for y in range(height):
         for x in range(width):
-            noise_vals[y,x] = noise.pnoise2((x/width-0.5)*8, (y/height-0.5)*8, octaves=3, base=20) * 0.2
+            noise_vals[y,x] = noise_gen([x / 8, y / 8]) * 0.2
+
     terrain = mountain_shape + noise_vals
     min_val, max_val = np.min(terrain), np.max(terrain)
     return (terrain - min_val) / (max_val - min_val) if (max_val - min_val) > 0 else terrain
@@ -116,24 +117,15 @@ def generate_matlab_terrain(width, height):
 def generate_terrain(map_name, width, height, game_settings):
     """
     Generate the requested map based on the name.
-    To add a map, use the function "generate_noise_terrain," providing it with the desired parameters:
-    - width
-    - height
-    - scale (details; the smaller it is, the smoother it is)
-    - octave (the number of times it's processed; the larger it is, the more "anarchic" it is)
-    - persistence (the difference between 2 octaves; the smaller it is, the smoother it is)
-    - lacunarity (frequency between 2 octaves)
-    - seed (manages randomness)
-    - factor (manages the map's maximum height relative to the height in the settings)
     """
     normalized_terrain = np.zeros((width, height))
     
     if map_name     == "Flat": normalized_terrain       = generate_flat_terrain(width, height)
     elif map_name   == "MatLab": normalized_terrain     = generate_matlab_terrain(width, height)
     elif map_name   == "Mountain": normalized_terrain   = generate_mountain_terrain(width, height)
-    elif map_name   == "Default": normalized_terrain    = generate_noise_terrain(width, height, 2.0, 2, 0.5, 1.5, 50) * 0.3
-    elif map_name   == "Hills": normalized_terrain      = generate_noise_terrain(width, height, 3.0, 4, 0.4, 2.0, 100) * 0.7
-    elif map_name   == "Plain": normalized_terrain      = generate_noise_terrain(width, height, 5.0, 1, 0.5, 2.0, 73) * 0.15
-    else: normalized_terrain                            = generate_noise_terrain(width, height, 2.0, 2, 0.5, 1.5, 50)
+    elif map_name   == "Default": normalized_terrain    = generate_noise_terrain(width, height, 100, 2, 50) * 0.3
+    elif map_name   == "Hills": normalized_terrain      = generate_noise_terrain(width, height, 70, 4, 100) * 0.7
+    elif map_name   == "Plain": normalized_terrain      = generate_noise_terrain(width, height, 200, 1, 73) * 0.15
+    else: normalized_terrain                            = generate_noise_terrain(width, height, 100, 2, 50)
 
     return _adjust_height(normalized_terrain, game_settings)

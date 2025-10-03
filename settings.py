@@ -13,6 +13,9 @@
 
 import math
 
+# --- LANGUAGE ---
+LANGUAGE                = "en" # "fr" or "en"
+
 # --- SCREEN ---
 SCREEN_WIDTH            = 1400
 SCREEN_HEIGHT           = 900
@@ -46,16 +49,14 @@ MAX_SLOPE               = 30
 POINT_SCALE             = 8
 
 # --- JOSYTICKS ---
-JOYSTICK_DEADZONE       = 0.15
-VIBRATION_DISTANCE_RATIO= 0.5
+JOYSTICK_DEADZONE = 0.15
 
 # --- PHYSICS ---
 GRAVITY = 9.81
 SLOPE_CORRECTION        = True
 BRAKE_CORRECTION        = True
 VC_SPEED                = False
-INFINITY_MAP            = False
-VIBRATION_MODE          = False
+WAC_RATIO               = 1.0
 
 # --- GAME RULES ---
 ROUND_DURATION          = 30
@@ -71,5 +72,6 @@ PLAYER2_ANIMAL          = "Deer"
 PLAYER3_ANIMAL          = "Deer"
 PLAYER4_ANIMAL          = "Deer"
 AI_ENABLED              = False
-WAC_RATIO               = 1.0
-
+INFINITY_MAP            = False
+VIBRATION_MODE          = False
+VIBRATION_DISTANCE_RATIO= 0.5
