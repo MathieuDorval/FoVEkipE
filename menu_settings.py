@@ -8,7 +8,7 @@
 #   \ \ \-./\ \  \ \  __\   \ \ \-.  \  \ \ \_\ \     \ \___  \  \ \  __\   \/_/\ \/ \/_/\ \/ \ \ \  \ \ \-.  \  \ \ \__ \  \ \___  \  
 #    \ \_\ \ \_\  \ \_____\  \ \_\\"\_\  \ \_____\     \/\_____\  \ \_____\    \ \_\    \ \_\  \ \_\  \ \_\\"\_\  \ \_____\  \/\_____\ 
 #     \/_/  \/_/   \/_____/   \/_/ \/_/   \/_____/      \/_____/   \/_____/     \/_/     \/_/   \/_/   \/_/ \/_/   \/_____/   \/_____/
-#   (version 14/09)
+#   (version 03/10)
 #   -> Manage the settings menu
 
 import pygame
@@ -39,7 +39,7 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
     running = True
     while running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: return
+            if event.type == pygame.QUIT: return "QUIT"
 
         menu_actions = get_menu_inputs(gamepads)
         nav_x, nav_y = menu_actions['map_rotate_x'], menu_actions['map_nav_y']
@@ -71,8 +71,7 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         if menu_actions['open_settings'] and not last_select_button:
             selected_action = options[option_keys[selected_index]]
             if selected_action == "quit_game":
-                pygame.quit()
-                exit()
+                return "QUIT"
             else:
                 running = False # Close settings menu for any other option
         
@@ -84,4 +83,5 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         draw_settings_menu(screen, game_settings, selected_index, option_keys)
         pygame.display.flip()
         clock.tick(settings.FPS)
-
+    
+    return None

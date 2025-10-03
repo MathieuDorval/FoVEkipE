@@ -11,60 +11,6 @@
 #   (version 25/09)
 #   -> Main game file
 
-"""
-le code à exécuter pour lancer le jeu.
-
-quand on lance le jeu, on doit choisir pour chaque player son animal, rôle (prey/predator) et si c'est une IA ou un joueur. (les valeurs par défault sont dans settings.py)
-de base 2 joueurs, si il y a 2 manettes de connectés on peut avoir 2, 3 ou 4 joueurs. (voir les commandes en dessous)
-
-changement dans la physique du jeu : (que l'on peut activer / désactiver dans les paramètres si on veux garder la physique de base (voir les commandes en dessous))
-dans la physique de base, le seul moyen de ralentir la vitesse était les forces de frottement et gravité, ça donnait des "glissades" interminable jusqu'à l'arrêt.
-    -> j'ai ajouté une Fbrake pour chaque animal (qui dépend de F0i), qui permet, si aucune commande n'ai actionnée, d'ajouter une force de freinage en plus des forces de frottements pour aider à ralentir
-    -> à voir si il faut faire autrement, mais il faut ajouter une manière pour ralentir car la logique d'avant partait du principe que les animaux étaient tous sur roulettes..
-
-dans la physique de base, lorque l'on était en descente, la gravité aidait à l'accélération proportionnellement au niveau de pente, sauf que dans des pentes très importante, la gravité aidait beaucoup trop (vrai d'un point de vu mathématique mais faux d'un point de vue réel)
-    -> j'ai ajouter une slopeOpt pour chaque animal, qui définit la pente (négative) jusqu'à laquelle il peut profiter à 100% de l'aide de g, et au dela, g aide de moins en moins, jusqu'à devenir délétaire pour des pentes < 2*slopeOpt
-    -> la logique est : g aide normalement jusqu'à slopeOpt, puis au dela, aide de moins en moins : si slopeOpt est 15%, alors jusqu'à -15%, g aide normalement, puis pour -16%, g aide comme pour -14%, pour -20% comme pour -10% etc...
-    -> donc au dela de 2* slopeOpt, par exemple -32%, g "aide" comme pour 2%, donc est délétaire.
-    -> c'est la logique la plus proche de la réalité, car pareil, on est pas sur roulettes et on ne profite pas à fond de la gravité
-
-============= COMMANDES ============|       0 MANETTE (clavier)     |           1 MANETTE           |           2 MANETTES          |           3 MANETTES          |           4 MANETTES          |
--=-=-=-=-=-=-=- MENU -=-=-=-=-=-=-=-|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|
-Changer de Map                      |   'Y' et 'H' (haut / bas)     | haut/bas croix directionnelle | haut/bas croix d. (manette 1) | haut/bas croix d. (manette 1) | haut/bas croix d. (manette 1) |
-Rotation de la map                  |  'G' et 'J' (gauche/droite)   |   G/D croix directionnelle    |   G/D croix d. (manette 1)    |   G/D croix d. (manette 1)    |   G/D croix d. (manette 1)    |
-Ouvrir/Fermer paramètres            |         'BACKSPACE'           |            select             |       select (manette 1)      |       select (manette 1)      |       select (manette 1)      |
-Déplacer dans paramètres            |      'Y', 'G', 'H' et 'J'     |     croix directionnelle      |      croix d. (manette 1)     |      croix d. (manette 1)     |      croix d. (manette 1)     |
-------------- PLAYER 1 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Ajouter/Supprimer/IA                |                               |                               |    clique joystick gauche (m.1) |    clique joystick gauche (m.1) |    clique joystick gauche (m.1) |
-Naviguer entre les choix            |           'zqsd'              |        joystick gauche        |     joystick gauche (m.1)     |     joystick gauche (m.1)     |     joystick gauche (m.1)     |
-Se mettre "Ready"                   |           'SPACE'             |              LT               |           LT (m.1)            |           LT (m.1)            |           LT (m.1)            |
-------------- PLAYER 2 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Ajouter/Supprimer/IA                |                               |                               |    clique joystick gauche (m.2) |    clique joystick gauche (m.2) |    clique joystick gauche (m.2) |
-Naviguer entre les choix            |    flèches directionnelles    |        joystick droit         |     joystick gauche (m.2)     |     joystick gauche (m.2)     |     joystick gauche (m.2)     |
-Se mettre "Ready"                   |           'RETURN'            |              RT               |           LT (m.2)            |           LT (m.2)            |           LT (m.2)            |
-------------- PLAYER 3 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Ajouter/Supprimer/IA                |                               |                               |  clique joystick droit (m.1)  |    clique joystick gauche (m.3) |    clique joystick gauche (m.3) |
-Naviguer entre les choix            |                               |                               |     joystick droit (m.1)      |     joystick gauche (m.3)     |     joystick gauche (m.3)     |
-Se mettre "Ready"                   |                               |                               |           RT (m.1)            |           LT (m.3)            |           LT (m.3)            |
-------------- PLAYER 4 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Ajouter/Supprimer/IA                |                               |                               |  clique joystick droit (m.2)  |    clique joystick droit (m.1)  |    clique joystick gauche (m.4) |
-Naviguer entre les choix            |                               |                               |     joystick droit (m.2)      |     joystick droit (m.1)      |     joystick gauche (m.4)     |
-Se mettre "Ready"                   |                               |                               |           RT (m.2)            |           RT (m.1)            |           LT (m.4)            |
--=-=-=-=-=-=-=- JEU -=-=-=-=-=-=-=- |= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|= = = = = = = = = = = = = = = =|
-------------- PLAYER 1 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |           'zqsd'              |        joystick gauche        |     joystick gauche (m.1)     |     joystick gauche (m.1)     |     joystick gauche (m.1)     |
-Avancer (dépenser du Wac)           |           'SPACE'             |              LT               |           LT (m.1)            |           LT (m.1)            |           LT (m.1)            |
-------------- PLAYER 2 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |    flèches directionnelles    |        joystick droit         |     joystick gauche (m.2)     |     joystick gauche (m.2)     |     joystick gauche (m.2)     |
-Avancer (dépenser du Wac)           |           'RETURN'            |              RT               |           LT (m.2)            |           LT (m.2)            |           LT (m.2)            |
-------------- PLAYER 3 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |                               |                               |     joystick droit (m.1)      |     joystick gauche (m.3)     |     joystick gauche (m.3)     |
-Avancer (dépenser du Wac)           |                               |                               |           RT (m.1)            |           LT (m.3)            |           LT (m.3)            |
-------------- PLAYER 4 -------------|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|- - - - - - - - - - - - - - - -|
-Déplacements                        |                               |                               |     joystick droit (m.2)      |     joystick droit (m.1)      |     joystick gauche (m.4)     |
-Avancer (dépenser du Wac)           |                               |                               |           RT (m.2)            |           RT (m.1)            |           LT (m.4)            |
-"""
-
 import pygame
 import settings
 from renderer import MapRenderer
@@ -74,8 +20,8 @@ from animals import ANIMALS
 from maps import generate_terrain
 from letsplay import game_loop
 from menu import menu_loop
-import scipy.io
 from datetime import datetime
+import logs
 
 def main():
     """
@@ -122,8 +68,7 @@ def main():
             status = "AI" if is_ai else "PLAYER"
         game_settings[f'p{i}_status'] = status
 
-    session_data = { 'games': {} }
-    game_count = 0
+    session_data = logs.init_session_log(len(gamepads))
     
     running = True
     while running:
@@ -133,10 +78,8 @@ def main():
             running = False
             continue
 
-        game_count += 1
-        game_key = f"game_{game_count}"
-        
         surface_data = generate_terrain(game_settings['map_name'], settings.MAP_POINTS, settings.MAP_POINTS, game_settings)
+        game_settings['surface_data'] = surface_data
         map_renderer = MapRenderer(screen, screen.get_rect(), surface_data, game_settings)
         
         players = []
@@ -161,43 +104,15 @@ def main():
             )
             players.append(player)
 
-        game_data = {
-            'launch_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'settings': {
-                'map_name': game_settings['map_name'],
-                'map_data': surface_data,
-                'map_width': game_settings['map_width'],
-                'map_max_height_ratio': settings.MAP_MAX_HEIGHT_RATIO,
-                'round_duration': game_settings['round_duration'],
-                'winning_score': game_settings['winning_score']
-            },
-            'num_players': len(players),
-            'players': {},
-            'rounds': {}
-        }
+        game_data = logs.add_game_to_log(session_data, game_settings, players)
 
-        for p in players:
-            game_data['players'][f'player_{p.id}'] = {
-                'animal': p.animal['name'], 'stats': p.stats,
-                'role': p.role, 'is_ai': p.is_ai,
-                'color': p.color
-            }
+        continue_game = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle)
 
-        game_data_from_loop = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle)
-
-        if game_data_from_loop is None:
+        if not continue_game:
             running = False
-        else:
-            session_data['games'][game_key] = game_data_from_loop
 
-    if game_count > 0:
-        filename = "game_log.mat"
-        try:
-            scipy.io.savemat(filename, session_data)
-            print(f"FoVEkipE INFO: Data saved in {filename}")
-        except Exception as e:
-            print(f"FoVEkipE ERROR: Could not save data. {e}")
-
+    if session_data['games']:
+        logs.save_log_file(session_data)
 
     pygame.quit()
 

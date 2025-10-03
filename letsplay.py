@@ -8,7 +8,7 @@
 #   \ \ \____  \ \  __\   \/_/\ \/ \ \___  \  \ \  _-/ \ \ \____  \ \  __ \  \ \____ \  
 #    \ \_____\  \ \_____\    \ \_\  \/\_____\  \ \_\    \ \_____\  \ \_\ \_\  \/\_____\ 
 #     \/_____/   \/_____/     \/_/   \/_____/   \/_/     \/_____/   \/_/\/_/   \/_____/
-#   (version 24/09)
+#   (version 03/10)
 #   -> Handles the main game loop
 
 import pygame
@@ -16,10 +16,11 @@ import settings
 import random
 from commands import get_player_action
 from ui import draw_game_info, draw_game_over_screen
-import numpy as np
 from killcam import play_killcam
 from ai import get_ai_inputs
 from transitions import play_start_transition, play_round_reset_transition
+import logs
+from datetime import datetime
 
 def reset_players_positions(players, game_settings):
     """
@@ -72,7 +73,7 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     Gère la partie complète.
     """
     map_rotation_angle = initial_map_rotation
-    surface_data = game_data['settings']['map_data']
+    surface_data = game_settings['surface_data']
     
     scores = {p.id: 0 for p in players}
     round_count = 0
@@ -83,18 +84,10 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     game_over = False
     while not game_over:
         round_count += 1
-        round_key = f"round_{round_count}"
         
-        active_players = list(players)
-        
-        round_data = { 'frame_data': { 'time': [] } }
-        for p in players:
-            round_data['frame_data'][f'player_{p.id}'] = {
-                'pos_x': [], 'pos_y': [], 'pos_z': [], 'vel_x': [], 'vel_y': [], 
-                'acc_x': [], 'acc_y': [], 'wac': [], 'slope': [], 'color': p.color
-            }
-
+        round_data = logs.add_round_to_game(game_data, players)
         capture_events = []
+
         round_time = 0.0
         round_running = True
         while round_running:
@@ -103,45 +96,31 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
             round_time += dt
 
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: return None
+                if event.type == pygame.QUIT: return False
 
-            for player in active_players:
-                action = get_ai_inputs(player, active_players, game_settings) if player.is_ai else get_player_action(player.id, gamepads, map_rotation_angle)
+            active_players_list = [p for p in players if p.is_active]
+            for player in active_players_list:
+                action = get_ai_inputs(player, active_players_list, game_settings) if player.is_ai else get_player_action(player.id, gamepads, map_rotation_angle)
                 player.update(action['direction'], action['intensity'], dt, surface_data, game_settings)
             
-            round_data['frame_data']['time'].append(round_time)
-            for p in players:
-                frame = round_data['frame_data'][f'player_{p.id}']
-                frame['pos_x'].append(p.x)
-                frame['pos_y'].append(p.y)
-                frame['pos_z'].append(p.get_current_z(surface_data, game_settings))
-                frame['vel_x'].append(p.velocity.x)
-                frame['vel_y'].append(p.velocity.y)
-                frame['acc_x'].append(p.acceleration.x)
-                frame['acc_y'].append(p.acceleration.y)
-                frame['wac'].append(p.Wac)
-                frame['slope'].append(p.slope)
+            logs.add_frame_to_round(round_data, players, round_time, surface_data, game_settings)
 
-            predators = [p for p in active_players if p.role == 'predator']
+            predators = [p for p in active_players_list if p.role == 'predator']
             if predators:
-                captured_in_frame = []
-                remaining_prey = [p for p in active_players if p.role == 'prey']
+                remaining_prey = [p for p in active_players_list if p.role == 'prey']
                 for prey in remaining_prey:
                     for predator in predators:
                         if check_collision(predator, prey, game_settings):
                             prey.is_active = False
-                            captured_in_frame.append({'prey': prey, 'predator': predator})
-                            break 
-                if captured_in_frame:
-                    for capture in captured_in_frame:
-                        capture_events.append({'time': round_time, 'predator_id': capture['predator'].id, 'prey_id': capture['prey'].id})
-                    active_players = [p for p in active_players if p.is_active]
-                    
-                    if not any(p.role == 'prey' for p in active_players):
-                        all_predators = [p for p in players if p.role == 'predator']
-                        for p in all_predators: 
-                            scores[p.id] += 1
-                        round_running = False
+                            capture_events.append({'time': round_time, 'predator_id': predator.id, 'prey_id': prey.id})
+                            break
+                
+                active_players_list = [p for p in players if p.is_active]
+                if not any(p.role == 'prey' for p in active_players_list):
+                    all_predators = [p for p in players if p.role == 'predator']
+                    for p in all_predators: 
+                        scores[p.id] += 1
+                    round_running = False
 
             if round_time >= game_settings.get('round_duration', 30) and round_running:
                 all_preys = [p for p in players if p.role == 'prey']
@@ -152,17 +131,17 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
             screen.fill(settings.BLACK)
             map_renderer.draw_map(map_rotation_angle, game_settings)
             
-            for player in active_players:
+            active_players_list = [p for p in players if p.is_active]
+            for player in active_players_list:
                 map_renderer.draw_point(player.x, player.y, player.color, map_rotation_angle)
             draw_game_info(screen, scores, round_time, players, game_settings['round_duration'])
             pygame.display.flip()
 
-        round_winner_role = 'predator' if not any(p.role == 'prey' for p in active_players) else ('prey' if round_time >= game_settings.get('round_duration', 30) else None)
-        for key, value in round_data['frame_data'].items():
-            if isinstance(value, dict):
-                for sub_key, sub_value in value.items(): value[sub_key] = np.array(sub_value)
-            else: round_data['frame_data'][key] = np.array(value)
-        game_data['rounds'][round_key] = round_data
+        active_at_end = [p for p in players if p.is_active]
+        round_winner_role = 'predator' if not any(p.role == 'prey' for p in active_at_end) else ('prey' if round_time >= game_settings.get('round_duration', 30) else 'None')
+        
+        round_data['winner_role'] = round_winner_role
+        round_data['duration'] = round_time
         
         if any(s >= game_settings.get('winning_score', 3) for s in scores.values()):
             game_over = True
@@ -185,6 +164,8 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
 
                 play_round_reset_transition(screen, clock, players, map_renderer, map_rotation_angle, last_screen_positions, new_screen_positions)
     
+    logs.finalize_game_data(game_data, scores, players, game_settings.get('winning_score', 3))
     draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings)
     
-    return game_data
+    return True
+

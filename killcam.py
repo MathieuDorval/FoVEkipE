@@ -8,7 +8,7 @@
 #   \ \  _"-.  \ \ \  \ \ \____  \ \ \____  \ \ \____  \ \  __ \  \ \ \-./\ \  
 #    \ \_\ \_\  \ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \ \_\ 
 #     \/_/\/_/   \/_/   \/_____/   \/_____/   \/_____/   \/_/\/_/   \/_/  \/_/
-#   (version 24/09)
+#   (version 03/10)
 #   -> Manages the display of the killcam at the end of the round
 
 import pygame
@@ -16,6 +16,7 @@ import settings
 import random
 import math
 import numpy as np
+import copy
 
 from ui import draw_killcam_hud
 
@@ -47,7 +48,7 @@ class Particle:
 
 def _find_closest_index(time_array, target_time):
     """
-    Trouve l'index le plus proche dans un tableau.
+    Trouve l'index le plus proche dans un tableau numpy.
     """
     return np.argmin(np.abs(time_array - target_time))
 
@@ -55,12 +56,28 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
     """
     Affiche la killcam.
     """
-    if not round_winner_role or not game_data:
-        return {}
+    if not round_winner_role or round_winner_role == 'None':
+        # For prey victory by timeout, there might be no captures, which is fine.
+        # For predator victory, there must be captures.
+        if round_winner_role == 'predator' and not capture_events:
+            return {}
 
     round_key = f"round_{len(game_data['rounds'])}"
     round_data = game_data['rounds'][round_key]
-    time_data = round_data.get('frame_data', {}).get('time', np.array([]))
+    
+    # We work on a copy to avoid modifying the original log data (which are lists)
+    frame_data = copy.deepcopy(round_data.get('frame_data', {}))
+    
+    # Convert all lists to numpy arrays for processing
+    for key, value in frame_data.items():
+        if isinstance(value, list):
+            frame_data[key] = np.array(value)
+        elif isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                if isinstance(sub_value, list):
+                    value[sub_key] = np.array(sub_value)
+    
+    time_data = frame_data.get('time', np.array([]))
     
     if time_data.size < 2:
         return {}
@@ -100,9 +117,9 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                     if prey_key in game_data['players']:
                         prey_data = game_data['players'][prey_key]
                         kill_frame_index = _find_closest_index(time_data, event['time'])
-                        if len(round_data['frame_data'][prey_key]['pos_x']) > kill_frame_index:
-                            kill_pos_x = round_data['frame_data'][prey_key]['pos_x'][kill_frame_index]
-                            kill_pos_y = round_data['frame_data'][prey_key]['pos_y'][kill_frame_index]
+                        if frame_data[prey_key]['pos_x'].size > kill_frame_index:
+                            kill_pos_x = frame_data[prey_key]['pos_x'][kill_frame_index]
+                            kill_pos_y = frame_data[prey_key]['pos_y'][kill_frame_index]
                             kill_pos_z = (map_renderer.get_z(kill_pos_x, kill_pos_y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
                             all_particles.extend([Particle(kill_pos_x, kill_pos_y, kill_pos_z, prey_data['color']) for _ in range(settings.KILLCAM_N_PARTICLES)])
 
@@ -113,11 +130,11 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 if not key.startswith('player_'): continue
                 player_id = int(key.split('_')[-1])
                 is_alive = all(event['prey_id'] != player_id or current_game_time_to_show < event['time'] for event in capture_events)
-                if is_alive and len(round_data['frame_data'][f'player_{player_id}']['pos_x']) > frame_index:
-                    pos_x, pos_y = round_data['frame_data'][f'player_{player_id}']['pos_x'][frame_index], round_data['frame_data'][f'player_{player_id}']['pos_y'][frame_index]
+                if is_alive and frame_data[f'player_{player_id}']['pos_x'].size > frame_index:
+                    pos_x, pos_y = frame_data[f'player_{player_id}']['pos_x'][frame_index], frame_data[f'player_{player_id}']['pos_y'][frame_index]
                     for i in range(1, TRAIL_LENGTH):
                         if (trail_index := frame_index - i * 2) >= 0:
-                            trail_x, trail_y = round_data['frame_data'][key]['pos_x'][trail_index], round_data['frame_data'][key]['pos_y'][trail_index]
+                            trail_x, trail_y = frame_data[key]['pos_x'][trail_index], frame_data[key]['pos_y'][trail_index]
                             trail_z = (map_renderer.get_z(trail_x, trail_y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
                             map_renderer.draw_particle(trail_x, trail_y, trail_z, p_data['color'], 150 * (1 - i / TRAIL_LENGTH), map_rotation_angle)
                     map_renderer.draw_point(pos_x, pos_y, p_data['color'], map_rotation_angle)
@@ -164,8 +181,8 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                     if prey_key in game_data['players']:
                         prey_data = game_data['players'][prey_key]
                         kill_frame_index = _find_closest_index(time_data, event['time'])
-                        if len(round_data['frame_data'][prey_key]['pos_x']) > kill_frame_index:
-                            kill_pos_x, kill_pos_y = round_data['frame_data'][prey_key]['pos_x'][kill_frame_index], round_data['frame_data'][prey_key]['pos_y'][kill_frame_index]
+                        if frame_data[prey_key]['pos_x'].size > kill_frame_index:
+                            kill_pos_x, kill_pos_y = frame_data[prey_key]['pos_x'][kill_frame_index], frame_data[prey_key]['pos_y'][kill_frame_index]
                             kill_pos_z = (map_renderer.get_z(kill_pos_x, kill_pos_y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
                             all_particles.extend([Particle(kill_pos_x, kill_pos_y, kill_pos_z, prey_data['color']) for _ in range(settings.KILLCAM_N_PARTICLES)])
 
@@ -176,11 +193,11 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 if not key.startswith('player_'): continue
                 player_id = int(key.split('_')[-1])
                 is_alive = all(event['prey_id'] != player_id or current_game_time_to_show < event['time'] for event in capture_events)
-                if is_alive and len(round_data['frame_data'][key]['pos_x']) > frame_index:
-                    pos_x, pos_y = round_data['frame_data'][key]['pos_x'][frame_index], round_data['frame_data'][key]['pos_y'][frame_index]
+                if is_alive and frame_data[key]['pos_x'].size > frame_index:
+                    pos_x, pos_y = frame_data[key]['pos_x'][frame_index], frame_data[key]['pos_y'][frame_index]
                     for i in range(1, TRAIL_LENGTH):
                         if (trail_index := frame_index - i * 2) >= 0:
-                            trail_x, trail_y = round_data['frame_data'][key]['pos_x'][trail_index], round_data['frame_data'][key]['pos_y'][trail_index]
+                            trail_x, trail_y = frame_data[key]['pos_x'][trail_index], frame_data[key]['pos_y'][trail_index]
                             trail_z = (map_renderer.get_z(trail_x, trail_y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
                             map_renderer.draw_particle(trail_x, trail_y, trail_z, p_data['color'], 150 * (1 - i / TRAIL_LENGTH), map_rotation_angle)
                     map_renderer.draw_point(pos_x, pos_y, p_data['color'], map_rotation_angle)
@@ -199,7 +216,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
         predators_data = {k: v for k, v in game_data['players'].items() if v['role'] == 'predator'}
         for key, p_data in predators_data.items():
             final_frame_index = -1
-            pos_x, pos_y = round_data['frame_data'][key]['pos_x'][final_frame_index], round_data['frame_data'][key]['pos_y'][final_frame_index]
+            pos_x, pos_y = frame_data[key]['pos_x'][final_frame_index], frame_data[key]['pos_y'][final_frame_index]
             pos_z = (map_renderer.get_z(pos_x, pos_y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
             all_particles.extend([Particle(pos_x, pos_y, pos_z, p_data['color']) for _ in range(settings.KILLCAM_N_PARTICLES)])
         
@@ -212,7 +229,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
             for key, p_data in game_data['players'].items():
                 if p_data['role'] == 'prey' and all(event['prey_id'] != int(key.split('_')[-1]) for event in capture_events):
                     final_frame_index = -1
-                    pos_x, pos_y = round_data['frame_data'][key]['pos_x'][final_frame_index], round_data['frame_data'][key]['pos_y'][final_frame_index]
+                    pos_x, pos_y = frame_data[key]['pos_x'][final_frame_index], frame_data[key]['pos_y'][final_frame_index]
                     map_renderer.draw_point(pos_x, pos_y, p_data['color'], map_rotation_angle)
             for p in all_particles:
                 p.update(dt)
@@ -224,12 +241,12 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 if event.type == pygame.QUIT: pygame.quit(); return
 
     final_positions = {}
-    last_frame_index = len(time_data) - 1
+    last_frame_index = time_data.size - 1
     if last_frame_index >= 0:
         for key, p_data in game_data['players'].items():
             if not key.startswith('player_'): continue
             player_id = int(key.split('_')[-1])
-            player_frame_data = round_data['frame_data'][key]
+            player_frame_data = frame_data[key]
             
             is_captured = False
             for event in capture_events:
@@ -247,3 +264,4 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 final_positions[player_id] = {'x': pos_x, 'y': pos_y}
 
     return final_positions
+

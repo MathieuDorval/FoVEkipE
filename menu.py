@@ -8,7 +8,7 @@
 #   \ \ \-./\ \  \ \  __\   \ \ \-.  \  \ \ \_\ \  
 #    \ \_\ \ \_\  \ \_____\  \ \_\\"\_\  \ \_____\ 
 #     \/_/  \/_/   \/_____/   \/_/ \/_/   \/_____/ 
-#   (version 14/09)
+#   (version 03/10)
 #   -> Manage the main menu
 
 import pygame
@@ -61,7 +61,9 @@ def menu_loop(screen, clock, gamepads, game_settings):
 
         if menu_actions['open_settings'] and not last_inputs.get('open_settings', False):
             if not is_first_frame: 
-                menu_settings_loop(screen, clock, gamepads, game_settings)
+                action = menu_settings_loop(screen, clock, gamepads, game_settings)
+                if action == "QUIT":
+                    return False, 0 # Propagate quit signal to game.py main loop
 
         # --- Handle Player-Specific Actions ---
         for i in range(1, 5):
@@ -172,4 +174,3 @@ def menu_loop(screen, clock, gamepads, game_settings):
         pygame.display.flip()
 
     return False, 0
-
