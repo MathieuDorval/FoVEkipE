@@ -8,7 +8,7 @@
 #   \ \ \-./\ \  \ \  __\   \ \ \-.  \  \ \ \_\ \     \ \___  \  \ \  __\   \/_/\ \/ \/_/\ \/ \ \ \  \ \ \-.  \  \ \ \__ \  \ \___  \  
 #    \ \_\ \ \_\  \ \_____\  \ \_\\"\_\  \ \_____\     \/\_____\  \ \_____\    \ \_\    \ \_\  \ \_\  \ \_\\"\_\  \ \_____\  \/\_____\ 
 #     \/_/  \/_/   \/_____/   \/_/ \/_/   \/_____/      \/_____/   \/_____/     \/_/     \/_/   \/_/   \/_/ \/_/   \/_____/   \/_____/
-#   (version 04/10)
+#   (version 03/10)
 #   → Manage the settings menu
 
 import pygame
@@ -16,7 +16,28 @@ import settings
 from commands import get_menu_inputs
 from ui import draw_settings_menu
 from language import set_language
-from renderer import draw_background
+
+def _get_player_gamepad_map(num_gamepads):
+    """(Internal) Returns a dictionary mapping player IDs to their gamepad index."""
+    if num_gamepads == 1: return {1: 0, 2: 0, 3: -1, 4: -1}
+    if num_gamepads == 2: return {1: 0, 2: 1, 3: 0, 4: 1}
+    if num_gamepads == 3: return {1: 0, 2: 1, 3: 2, 4: 0}
+    if num_gamepads >= 4: return {1: 0, 2: 1, 3: 2, 4: 3}
+    return {}
+
+def _is_sharing_active(game_settings, num_gamepads):
+    """(Internal) Checks if any gamepad is being shared by more than one active player."""
+    gamepad_map = _get_player_gamepad_map(num_gamepads)
+    active_players = [p for p in range(1, 5) if game_settings.get(f'p{p}_status', "INACTIVE") != "INACTIVE"]
+    
+    used_gamepads = []
+    for p_id in active_players:
+        gp_index = gamepad_map.get(p_id)
+        if gp_index is not None and gp_index != -1:
+            if gp_index in used_gamepads:
+                return True
+            used_gamepads.append(gp_index)
+    return False
 
 # Currently many options, needs cleaning for the final game
 def menu_settings_loop(screen, clock, gamepads, game_settings):
@@ -61,6 +82,13 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
 
     running = True
     while running:
+        num_gamepads = len(gamepads)
+        
+        vibration_is_allowed = num_gamepads >= 2 and not _is_sharing_active(game_settings, num_gamepads)
+        
+        if not vibration_is_allowed and game_settings['vibration_mode']:
+            game_settings['vibration_mode'] = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT: return "QUIT"
 
@@ -98,8 +126,7 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
                 current_value = game_settings.get(key_to_change)
                 game_settings[key_to_change] = not current_value
             elif key_to_change == "vibration_mode":
-                num_gamepads = len(gamepads)
-                if num_gamepads >= 2:
+                if vibration_is_allowed:
                     current_value = game_settings.get(key_to_change)
                     game_settings[key_to_change] = not current_value
 
@@ -115,8 +142,8 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         last_nav_x = nav_x
         last_select_button = menu_actions['open_settings']
         
-        draw_background(screen, dark=True)
-        draw_settings_menu(screen, game_settings, selected_index, option_keys, key_map, len(gamepads))
+        screen.fill(settings.BLACK)
+        draw_settings_menu(screen, game_settings, selected_index, option_keys, key_map, vibration_is_allowed)
         pygame.display.flip()
         clock.tick(settings.FPS)
     

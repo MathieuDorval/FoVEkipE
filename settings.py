@@ -20,7 +20,7 @@ LANGUAGE                = "en" # "fr" or "en"
 SCREEN_WIDTH            = 1400
 SCREEN_HEIGHT           = 900
 FULLSCREEN              = True  # Display the game full-screen without borders
-DISPLAY_SCREEN          = 0     # 0 for primary screen, 1 for secondary, etc.
+DISPLAY_SCREEN          = 1     # 0 for primary screen, 1 for secondary, etc.
 FPS                     = 60    # Update per second
 
 # --- COLOR ---

@@ -14,173 +14,179 @@
 import pygame
 import settings
 from animals import ANIMALS
-from commands import get_confirm_action
+from commands import get_confirm_action, get_menu_inputs
 import math
 from language import get_text
-from renderer import draw_background
 
 ANIMAL_IMAGES = {}
+LOGO_IMAGE = None
 
-def load_animal_images():
+def load_images():
     """
-    Load and pre-cache the animal textures to prevent reloading them on each frame.
+    Load and pre-cache all necessary images (animals and logo).
     """
-    if ANIMAL_IMAGES:
-        return
+    global LOGO_IMAGE
+    
+    # Load animal images if not already loaded
+    if not ANIMAL_IMAGES:
+        for animal in ANIMALS:
+            try:
+                img = pygame.image.load(animal['image_path']).convert_alpha()
+                ANIMAL_IMAGES[animal['name']] = {
+                    'source': img,
+                    'small': pygame.transform.scale(img, (50, 50))
+                }
+            except pygame.error as e:
+                print(f"Warning: Could not load image for {animal['name']}: {e}")
+                source_placeholder = pygame.Surface((100, 100), pygame.SRCALPHA); source_placeholder.fill((50, 50, 50))
+                small_placeholder = pygame.Surface((50, 50), pygame.SRCALPHA); small_placeholder.fill((50, 50, 50))
+                ANIMAL_IMAGES[animal['name']] = {'source': source_placeholder, 'small': small_placeholder}
 
-    # Load each animal image from its file path
-    for animal in ANIMALS:
+    # Load logo image if not already loaded
+    if LOGO_IMAGE is None:
         try:
-            img = pygame.image.load(animal['image_path']).convert_alpha()
-            ANIMAL_IMAGES[animal['name']] = {
-                'source': img,
-                'small': pygame.transform.scale(img, (50, 50))
-            }
+            LOGO_IMAGE = pygame.image.load('ressources/logo.png').convert_alpha()
+            # You might want to scale the logo to a fixed size here if needed
+            # For example: LOGO_IMAGE = pygame.transform.scale(LOGO_IMAGE, (400, 100))
         except pygame.error as e:
-            # If an image fails to load, print a warning and use a placeholder
-            print(f"Warning: Could not load image for {animal['name']}: {e}")
-            source_placeholder = pygame.Surface((100, 100), pygame.SRCALPHA); source_placeholder.fill((50, 50, 50))
-            small_placeholder = pygame.Surface((50, 50), pygame.SRCALPHA); small_placeholder.fill((50, 50, 50))
-            ANIMAL_IMAGES[animal['name']] = {'source': source_placeholder, 'small': small_placeholder}
+            print(f"Warning: Could not load logo.png: {e}. Falling back to text title.")
+            LOGO_IMAGE = False # Use False to indicate loading was attempted but failed
 
 def draw_game_info(screen, scores, round_time, players, game_settings):
     """
     Show the game details (time, WAC, scores).
     """
-    load_animal_images()
+    load_images()
     
     screen_width = screen.get_width()
     screen_height = screen.get_height()
-
-    # Define layout zones for the top info bar
+    
+    # --- ZONES DEFINITION ---
+    # Defines the layout zones for the top information bar.
     info_bar_height = screen_height * 0.1
     left_zone_rect = pygame.Rect(0, 0, screen_width / 4, info_bar_height)
     center_zone_rect = pygame.Rect(left_zone_rect.right, 0, screen_width / 2, info_bar_height)
     right_zone_rect = pygame.Rect(center_zone_rect.right, 0, screen_width / 4, info_bar_height)
 
+    # --- TIMER BAR ---
+    # Draws the round timer bar, which changes color over time.
     round_duration = game_settings.get('round_duration', 30)
-    winning_score = game_settings.get('winning_score', 3)
-
-    # --- Draw Round Timer ---
     time_left = max(0, round_duration - round_time)
     time_ratio = time_left / round_duration if round_duration > 0 else 0
+    
     bar_max_width = center_zone_rect.width * 0.8
-    bar_height_time = info_bar_height * 0.2
+    bar_height_time = info_bar_height * 0.15
     current_bar_width = bar_max_width * time_ratio
     
-    # Draw timer background bar
-    bg_bar_rect = pygame.Rect(
-        center_zone_rect.centerx - bar_max_width / 2,
-        center_zone_rect.top + info_bar_height * 0.15,
-        bar_max_width,
-        bar_height_time
-    )
+    # Interpolate color based on time remaining
+    if time_ratio > 0.5:
+        # From green to yellow
+        interp_ratio = (time_ratio - 0.5) * 2
+        color = [int(c2 + (c1 - c2) * interp_ratio) for c1, c2 in zip(settings.TIME_BAR_COLOR_START, settings.TIME_BAR_COLOR_MIDDLE)]
+    else:
+        # From yellow to red
+        interp_ratio = time_ratio * 2
+        color = [int(c2 + (c1 - c2) * interp_ratio) for c1, c2 in zip(settings.TIME_BAR_COLOR_MIDDLE, settings.TIME_BAR_COLOR_END)]
+
+    bg_bar_rect = pygame.Rect(center_zone_rect.centerx - bar_max_width / 2, center_zone_rect.top + info_bar_height * 0.1, bar_max_width, bar_height_time)
     pygame.draw.rect(screen, (40, 40, 40), bg_bar_rect)
     
-    # Calculate the color gradient for the timer bar (green -> yellow -> red)
-    elapsed_ratio = 1.0 - time_ratio
-    if elapsed_ratio < 0.5:
-        interp_ratio = elapsed_ratio * 2 
-        r = settings.TIME_BAR_COLOR_START[0] * (1 - interp_ratio) + settings.TIME_BAR_COLOR_MIDDLE[0] * interp_ratio
-        g = settings.TIME_BAR_COLOR_START[1] * (1 - interp_ratio) + settings.TIME_BAR_COLOR_MIDDLE[1] * interp_ratio
-        b = settings.TIME_BAR_COLOR_START[2] * (1 - interp_ratio) + settings.TIME_BAR_COLOR_MIDDLE[2] * interp_ratio
-    else:
-        interp_ratio = (elapsed_ratio - 0.5) * 2
-        r = settings.TIME_BAR_COLOR_MIDDLE[0] * (1 - interp_ratio) + settings.TIME_BAR_COLOR_END[0] * interp_ratio
-        g = settings.TIME_BAR_COLOR_MIDDLE[1] * (1 - interp_ratio) + settings.TIME_BAR_COLOR_END[1] * interp_ratio
-        b = settings.TIME_BAR_COLOR_MIDDLE[2] * (1 - interp_ratio) + settings.TIME_BAR_COLOR_END[2] * interp_ratio
-    time_bar_color = (int(r), int(g), int(b))
-
-    # Draw timer foreground bar (the part that shrinks)
-    fg_bar_rect = pygame.Rect(
-        center_zone_rect.centerx - current_bar_width / 2,
-        bg_bar_rect.y,
-        current_bar_width,
-        bar_height_time
-    )
-    pygame.draw.rect(screen, time_bar_color, fg_bar_rect)
-    pygame.draw.rect(screen, settings.WHITE, bg_bar_rect, 2) # Draw border
-
-    # --- Draw Score Display ---
-    predators = sorted([p for p in players if p.role == 'predator'], key=lambda p: p.id)
-    preys = sorted([p for p in players if p.role == 'prey'], key=lambda p: p.id)
-    predator_score = scores.get(predators[0].id, 0) if predators else 0
+    fg_bar_rect = pygame.Rect(center_zone_rect.centerx - current_bar_width / 2, bg_bar_rect.y, current_bar_width, bar_height_time)
+    pygame.draw.rect(screen, color, fg_bar_rect)
+    pygame.draw.rect(screen, settings.WHITE, bg_bar_rect, 2)
+    
+    # --- SCORE DISPLAY ---
+    # Draws the score circles and labels for both teams.
+    winning_score = game_settings.get('winning_score', 3)
+    predators = [p for p in players if p.role == 'predator']
+    preys = [p for p in players if p.role == 'prey']
+    pred_score = scores.get(predators[0].id, 0) if predators else 0
     prey_score = scores.get(preys[0].id, 0) if preys else 0
 
-    score_y = bg_bar_rect.bottom + 25
-    center_x = screen_width // 2
-    num_side_circles = winning_score - 1
-    victory_radius = 12
-    score_radius = 10
-    spacing = 8
-    font_score_label = pygame.font.Font(None, 28)
+    radius = 10
+    big_radius = 12
+    spacing = 30
+    score_y = bg_bar_rect.bottom + info_bar_height * 0.35
+    center_x = center_zone_rect.centerx
+    font_score_label = pygame.font.Font(None, 24)
+
+    # Predator Label
+    pred_label_text = get_text('predators_label').upper()
+    pred_label_surf = font_score_label.render(pred_label_text, True, settings.COLOR_PREDATOR)
+    last_pred_circle_x = center_x - spacing * (winning_score - 1)
+    pred_label_rect = pred_label_surf.get_rect(midright=(last_pred_circle_x - 15, score_y))
+    screen.blit(pred_label_surf, pred_label_rect)
+
+    # Draw Predator scores (left side, filling from outside in)
+    for i in range(winning_score - 1):
+        circle_x = center_x - spacing * (i + 1)
+        if pred_score >= (winning_score - 1 - i):
+            pygame.draw.circle(screen, settings.COLOR_PREDATOR, (circle_x, score_y), radius)
+        else:
+            pygame.draw.circle(screen, settings.WHITE, (circle_x, score_y), radius, 1)
+
+    # Prey Label
+    prey_label_text = get_text('preys_label').upper()
+    prey_label_surf = font_score_label.render(prey_label_text, True, settings.COLOR_PREY)
+    last_prey_circle_x = center_x + spacing * (winning_score - 1)
+    prey_label_rect = prey_label_surf.get_rect(midleft=(last_prey_circle_x + 15, score_y))
+    screen.blit(prey_label_surf, prey_label_rect)
+
+    # Draw Prey scores (right side, filling from outside in)
+    for i in range(winning_score - 1):
+        circle_x = center_x + spacing * (i + 1)
+        if prey_score >= (winning_score - 1 - i):
+            pygame.draw.circle(screen, settings.COLOR_PREY, (circle_x, score_y), radius)
+        else:
+            pygame.draw.circle(screen, settings.WHITE, (circle_x, score_y), radius, 1)
 
     # Draw central victory circle
-    if predator_score >= winning_score:
-        pygame.draw.circle(screen, settings.COLOR_PREDATOR, (center_x, score_y), victory_radius)
+    victory_color = None
+    if pred_score >= winning_score:
+        victory_color = settings.COLOR_PREDATOR
     elif prey_score >= winning_score:
-        pygame.draw.circle(screen, settings.COLOR_PREY, (center_x, score_y), victory_radius)
+        victory_color = settings.COLOR_PREY
+
+    if victory_color:
+        pygame.draw.circle(screen, victory_color, (center_x, score_y), big_radius)
     else:
-        pygame.draw.circle(screen, settings.WHITE, (center_x, score_y), victory_radius, 2)
-    
-    # Draw Predators score (left side)
-    outermost_pred_circle_x = center_x - (victory_radius + spacing + score_radius + (num_side_circles - 1) * (score_radius * 2 + spacing))
-    pred_text_surf = font_score_label.render(get_text('predators_label'), True, settings.COLOR_PREDATOR)
-    pred_text_rect = pred_text_surf.get_rect(midright=(outermost_pred_circle_x - score_radius - spacing, score_y))
-    screen.blit(pred_text_surf, pred_text_rect)
+        pygame.draw.circle(screen, settings.WHITE, (center_x, score_y), big_radius, 1)
 
-    # Draw predator score circles (filling from outside in)
-    for i in range(num_side_circles):
-        offset = victory_radius + spacing + score_radius + i * (score_radius * 2 + spacing)
-        circle_x = center_x - offset
-        if predator_score >= (num_side_circles - i):
-            pygame.draw.circle(screen, settings.COLOR_PREDATOR, (circle_x, score_y), score_radius)
-        else:
-            pygame.draw.circle(screen, settings.COLOR_PREDATOR, (circle_x, score_y), score_radius, 2)
 
-    # Draw Preys score (right side)
-    outermost_prey_circle_x = center_x + (victory_radius + spacing + score_radius + (num_side_circles - 1) * (score_radius * 2 + spacing))
-    prey_text_surf = font_score_label.render(get_text('preys_label'), True, settings.COLOR_PREY)
-    prey_text_rect = prey_text_surf.get_rect(midleft=(outermost_prey_circle_x + score_radius + spacing, score_y))
-    screen.blit(prey_text_surf, prey_text_rect)
-    
-    # Draw prey score circles (filling from outside in)
-    for i in range(num_side_circles):
-        offset = victory_radius + spacing + score_radius + i * (score_radius * 2 + spacing)
-        circle_x = center_x + offset
-        if prey_score >= (num_side_circles - i):
-            pygame.draw.circle(screen, settings.COLOR_PREY, (circle_x, score_y), score_radius)
-        else:
-            pygame.draw.circle(screen, settings.COLOR_PREY, (circle_x, score_y), score_radius, 2)
-
-    # --- Draw Player WAC Bars ---
-    # This is a nested function to avoid code duplication for predators and preys
+    # --- WAC BARS ---
+    # Draws the WAC (stamina) bars for all active players.
     def draw_wac_bars(player_list, zone_rect, align_right=False):
+        """
+        Internal function to draw the WAC bars and the animal image.
+        """
         if not player_list: return
-        # Calculate dimensions for WAC bars based on number of players
+        
         num_players = len(player_list)
         total_bar_area_height = zone_rect.height * 0.9
+        
         single_item_height = total_bar_area_height / num_players
         bar_height = single_item_height * 0.7
         bar_spacing = single_item_height - bar_height
+        
         img_size = int(bar_height * 1.2)
         img_padding = 8
+        
         bar_width = zone_rect.width * 0.7 - img_size - img_padding
+        
         total_block_height = num_players * (bar_height + bar_spacing) - bar_spacing
         start_y = zone_rect.centery - total_block_height / 2
 
         for i, player in enumerate(player_list):
             if not player.is_active: continue
-            
-            # Calculate WAC ratio
+
             wac_max = player.stats.get('WacMax', 1)
             wac_ratio = player.Wac / wac_max if wac_max > 0 else 0
             remaining_wac_ratio = 1.0 - min(1.0, max(0.0, wac_ratio))
             fg_wac_width = bar_width * remaining_wac_ratio
+
             bar_y = start_y + i * (bar_height + bar_spacing)
             img_y_pos = bar_y + (bar_height - img_size) / 2
 
-            # Align left for predators, right for preys
             if align_right:
                 img_x_pos = zone_rect.right - (zone_rect.width * 0.05) - img_size
                 bar_x = img_x_pos - img_padding - bar_width
@@ -188,13 +194,11 @@ def draw_game_info(screen, scores, round_time, players, game_settings):
                 img_x_pos = zone_rect.left + (zone_rect.width * 0.05)
                 bar_x = img_x_pos + img_size + img_padding
 
-            # Draw animal icon
             animal_name = player.animal['name']
             if animal_name in ANIMAL_IMAGES:
                 img = pygame.transform.scale(ANIMAL_IMAGES[animal_name]['source'], (img_size, img_size))
                 screen.blit(img, (img_x_pos, img_y_pos))
             
-            # Draw WAC bar background and foreground
             wac_bg_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
             pygame.draw.rect(screen, (40, 40, 40), wac_bg_rect)
 
@@ -204,51 +208,64 @@ def draw_game_info(screen, scores, round_time, players, game_settings):
                 wac_fg_rect = pygame.Rect(bar_x, bar_y, fg_wac_width, bar_height)
             
             pygame.draw.rect(screen, player.color, wac_fg_rect)
-            pygame.draw.rect(screen, settings.WHITE, wac_bg_rect, 1) # Border
+            pygame.draw.rect(screen, settings.WHITE, wac_bg_rect, 1)
 
     draw_wac_bars(predators, left_zone_rect, align_right=False)
     draw_wac_bars(preys, right_zone_rect, align_right=True)
 
 
 def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, focus_level, cursor_pos, num_gamepads=0):
+    """
+    Draw a single player's control panel in the menu.
+    """
     font_large = pygame.font.Font(None, 32)
     
-    # --- Draw Panel Background and Border ---
     status = game_settings.get(f'p{player_id}_status', "INACTIVE")
     role = game_settings.get(f'p{player_id}_role', 'prey')
     player_colors = settings.PLAYER_COLORS[player_id]
     border_color = player_colors[role]
-    bg_color = (*border_color, 100) # Semi-transparent background
     
+    bg_color = (*border_color, 100)
+    
+    # Draw panel background and border
     panel_surface = pygame.Surface(base_rect.size, pygame.SRCALPHA)
     pygame.draw.rect(panel_surface, bg_color, panel_surface.get_rect(), border_radius=10)
     screen.blit(panel_surface, base_rect.topleft)
     pygame.draw.rect(screen, border_color, base_rect, width=2, border_radius=10)
 
-    # --- Draw Panel Header ---
+    # --- RECTANGLE DEFINITIONS ---
+    # This is where the error occurred. `bottom_rect` is now defined correctly.
     top_rect = pygame.Rect(base_rect.left, base_rect.top, base_rect.width, base_rect.height * 0.25)
+    bottom_rect = pygame.Rect(base_rect.left, top_rect.bottom, base_rect.width, base_rect.height * 0.75)
+    preview_rect = pygame.Rect(bottom_rect.left, bottom_rect.top, bottom_rect.width * 0.33, bottom_rect.height)
+    grid_rect = pygame.Rect(preview_rect.right, bottom_rect.top, bottom_rect.width * 0.67, bottom_rect.height)
+
+    # Draw title (Player X / AI)
     title_str = f"{get_text('player_label')} {player_id}"
     if status == "AI": title_str += f" ({get_text('ai_label')})"
     title_surf = font_large.render(title_str, True, settings.WHITE)
     title_pos = title_surf.get_rect(center=top_rect.center)
     screen.blit(title_surf, title_pos)
 
-    # --- Draw Role Selection Arrows ---
     is_human_player = status == "PLAYER"
+    
+    # Draw role-switching arrows
     if not (is_human_player and is_ready) and focus_level == 0:
         arrow_color = settings.WHITE
         arrow_size = title_surf.get_height() * 0.4
         arrow_padding = 10
         screen_width = screen.get_width()
 
-        if base_rect.centerx > screen_width / 2: # Panel is on the right (prey)
+        if base_rect.centerx > screen_width / 2: # Pannel is on the right (prey)
+            # Left arrow
             left_arrow_points = [
                 (title_pos.left - arrow_padding - arrow_size, title_pos.centery),
                 (title_pos.left - arrow_padding, title_pos.centery - arrow_size / 2),
                 (title_pos.left - arrow_padding, title_pos.centery + arrow_size / 2)
             ]
             pygame.draw.polygon(screen, arrow_color, left_arrow_points)
-        else: # Panel is on the left (predator)
+        else: # Pannel is on the left (predator)
+            # Right arrow
             right_arrow_points = [
                 (title_pos.right + arrow_padding + arrow_size, title_pos.centery),
                 (title_pos.right + arrow_padding, title_pos.centery - arrow_size / 2),
@@ -256,28 +273,30 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
             ]
             pygame.draw.polygon(screen, arrow_color, right_arrow_points)
 
-    # --- Draw Focus Highlight ---
+    # Draw highlight for the currently focused section (role or animal grid)
     if not (is_human_player and is_ready):
         highlight_rect = top_rect if focus_level == 0 else bottom_rect
         highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
         highlight_surf.fill((255, 255, 255, 40))
         screen.blit(highlight_surf, highlight_rect.topleft)
 
-    # --- Draw Animal Preview ---
-    bottom_rect = pygame.Rect(base_rect.left, top_rect.bottom, base_rect.width, base_rect.height * 0.75)
-    preview_rect = pygame.Rect(bottom_rect.left, bottom_rect.top, bottom_rect.width * 0.33, bottom_rect.height)
     confirmed_animal_idx = game_settings.get(f'p{player_id}_animal_index', 0)
+    
+    # Determine which animal to preview (the one under the cursor, or the confirmed one)
     preview_animal_idx = cursor_pos if focus_level == 1 and not (is_human_player and is_ready) else confirmed_animal_idx
     preview_animal = ANIMALS[preview_animal_idx]
     
+    # Draw the large preview of the selected animal
     if preview_animal['name'] in ANIMAL_IMAGES:
         image_area_h = preview_rect.height * 0.7
         preview_img_size = int(min(preview_rect.width * 0.9, image_area_h))
+        
         font_size = int(preview_rect.height * 0.15); font_size = max(12, min(font_size, 30))
         font_animal_name = pygame.font.Font(None, font_size)
 
         source_img = ANIMAL_IMAGES[preview_animal['name']]['source']
         scaled_preview_img = pygame.transform.scale(source_img, (preview_img_size, preview_img_size))
+        
         translated_name = get_text(preview_animal['name'])
         name_surf = font_animal_name.render(translated_name, True, settings.WHITE)
         
@@ -288,8 +307,7 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
         name_rect = name_surf.get_rect(centerx=preview_rect.centerx, top=img_rect.bottom + 5)
         screen.blit(name_surf, name_rect)
 
-    # --- Draw Animal Selection Grid ---
-    grid_rect = pygame.Rect(preview_rect.right, bottom_rect.top, bottom_rect.width * 0.67, bottom_rect.height)
+    # Draw the grid of selectable animals
     num_rows = 2
     icons_per_row = math.ceil(len(ANIMALS) / num_rows)
     cell_w = grid_rect.width / icons_per_row
@@ -309,23 +327,31 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
             
             is_hovered = not (is_human_player and is_ready) and focus_level == 1 and i == cursor_pos
 
-            # Draw animal icon or confirm button prompt
+            # Draw the confirmation button prompt (e.g., 'LT', 'SPACE') over the hovered icon
             if is_hovered:
-                confirm_button_text = "" # Determine prompt based on controller
+                confirm_button_text = ""
                 if num_gamepads == 0:
                     if player_id == 1: confirm_button_text = "SPACE"
                     elif player_id == 2: confirm_button_text = "ENT"
                 elif num_gamepads == 1:
                     if player_id == 1: confirm_button_text = "LT"
                     elif player_id == 2: confirm_button_text = "RT"
-                # ... (rest of controller logic)
+                elif num_gamepads == 2:
+                    if player_id in [1, 2]: confirm_button_text = "LT"
+                    elif player_id in [3, 4]: confirm_button_text = "RT"
+                elif num_gamepads == 3:
+                    if player_id in [1, 2, 3]: confirm_button_text = "LT"
+                    elif player_id == 4: confirm_button_text = "RT"
+                elif num_gamepads >= 4:
+                    if player_id in [1, 2, 3, 4]: confirm_button_text = "LT"
+
                 if confirm_button_text:
                     font_size_button = int(icon_size * 0.6) if len(confirm_button_text) <= 2 else int(icon_size * 0.4)
                     font_button_small = pygame.font.Font(None, font_size_button)
                     text_surf = font_button_small.render(confirm_button_text, True, settings.WHITE)
                     text_rect = text_surf.get_rect(center=icon_rect.center)
                     screen.blit(text_surf, text_rect)
-                else: # Fallback if no button text is defined
+                else:
                     if animal['name'] in ANIMAL_IMAGES:
                         source_icon = ANIMAL_IMAGES[animal['name']]['source']
                         scaled_icon = pygame.transform.scale(source_icon, (icon_size, icon_size))
@@ -336,13 +362,15 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
                     scaled_icon = pygame.transform.scale(source_icon, (icon_size, icon_size))
                     screen.blit(scaled_icon, icon_rect.topleft)
             
-            # Draw borders for selected and hovered icons
+            # Draw border around the confirmed animal
             if i == confirmed_animal_idx:
                 pygame.draw.rect(screen, border_color, icon_rect, 2)
+            
+            # Draw border around the hovered animal
             if is_hovered:
                 pygame.draw.rect(screen, settings.WHITE, icon_rect, 2)
 
-    # --- Draw "Ready" Overlay ---
+    # Draw "Ready" overlay when a player has locked in their choices
     if is_human_player and is_ready:
         overlay = pygame.Surface(base_rect.size, pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 120))
@@ -354,24 +382,34 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
 
 
 def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message="", num_gamepads=0):
-    load_animal_images()
-    font_large = pygame.font.Font(None, 74)
+    """
+    Draw the main menu screen.
+    """
+    load_images()
     font_role_title = pygame.font.Font(None, 48)
 
-    # --- Draw Game Title ---
-    title_text = font_large.render(get_text('game_name'), True, settings.WHITE)
-    title_rect = title_text.get_rect(midtop=(screen.get_width() // 2, 10))
-    screen.blit(title_text, title_rect)
+    # Draw the main game title or logo
+    top_element_rect = None
+    if LOGO_IMAGE:
+        logo_rect = LOGO_IMAGE.get_rect(midtop=(screen.get_width() // 2, 20))
+        screen.blit(LOGO_IMAGE, logo_rect)
+        top_element_rect = logo_rect
+    else:
+        font_large = pygame.font.Font(None, 74)
+        title_text = font_large.render(get_text('game_name'), True, settings.WHITE)
+        title_rect = title_text.get_rect(midtop=(screen.get_width() // 2, 10))
+        screen.blit(title_text, title_rect)
+        top_element_rect = title_rect
 
-    # --- Draw Team Titles (Predators/Preys) ---
+    # Draw the role titles (Predators / Preys)
     predator_title = font_role_title.render(get_text('predators_label').upper(), True, settings.COLOR_PREDATOR)
     prey_title = font_role_title.render(get_text('preys_label').upper(), True, settings.COLOR_PREY)
-    pred_title_rect = predator_title.get_rect(centerx=screen.get_width() * 0.25, y=title_rect.bottom + 15)
-    prey_title_rect = prey_title.get_rect(centerx=screen.get_width() * 0.75, y=title_rect.bottom + 15)
+    pred_title_rect = predator_title.get_rect(centerx=screen.get_width() * 0.25, y=top_element_rect.bottom + 15)
+    prey_title_rect = prey_title.get_rect(centerx=screen.get_width() * 0.75, y=top_element_rect.bottom + 15)
     screen.blit(predator_title, pred_title_rect)
     screen.blit(prey_title, prey_title_rect)
 
-    # --- Draw Player Panels ---
+    # Calculate panel dimensions and positions
     screen_w, screen_h = screen.get_size()
     panel_width = screen_w * 0.45
     panel_height = screen_h * 0.20
@@ -380,34 +418,64 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
     pred_x = screen_w * 0.25 - panel_width / 2
     prey_x = screen_w * 0.75 - panel_width / 2
     
+    # Draw a panel for each active player
     panel_rects_to_return = {}
     for player_id in range(1, 5):
         if game_settings.get(f'p{player_id}_status', "INACTIVE") == "INACTIVE": continue
+        y_pos = start_y + (player_id - 1) * (panel_height + v_spacing)
         role = game_settings.get(f'p{player_id}_role', 'prey')
         x_pos = pred_x if role == 'predator' else prey_x
-        y_pos = start_y + (player_id - 1) * (panel_height + v_spacing) # Position depends on ID to stack them
         panel_rect = pygame.Rect(x_pos, y_pos, panel_width, panel_height)
         panel_rects_to_return[player_id] = panel_rect
         draw_player_panel(screen, player_id, panel_rect, game_settings, p_ready.get(player_id, False), player_focus.get(player_id), player_cursors.get(player_id), num_gamepads)
 
-    # --- Draw Error Messages ---
+    # Display error messages if team composition is invalid
     if role_error_message:
         font_error = pygame.font.Font(None, 40)
         error_text = font_error.render(role_error_message, True, (255, 80, 80))
-        bg_rect = error_text.get_rect(center=(screen.get_width()//2, screen.get_height() - 50)).inflate(20, 10)
+        # Move the error message up to avoid overlapping with prompts
+        bg_rect = error_text.get_rect(center=(screen.get_width()//2, screen.get_height() - 170)).inflate(20, 10)
         bg_surf = pygame.Surface(bg_rect.size, pygame.SRCALPHA); bg_surf.fill((0, 0, 0, 180))
         screen.blit(bg_surf, bg_rect)
         screen.blit(error_text, error_text.get_rect(center=bg_rect.center))
 
-    # --- Draw "Press to Join" Prompts ---
+    # Display prompts for inactive players to join
     prompts = []
     font_prompt = pygame.font.Font(None, 28)
     prompt_color = (200, 200, 200)
-    # This logic determines which join prompts to show based on connected gamepads
+
     if num_gamepads == 1:
-        if game_settings.get('p1_status') == 'INACTIVE': prompts.append(get_text('p1_join_prompt'))
-        if game_settings.get('p2_status') == 'INACTIVE': prompts.append(get_text('p2_join_prompt_1pad'))
-    # ... (rest of gamepad prompt logic)
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_1pad'))
+    elif num_gamepads == 2:
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_2pads'))
+        if game_settings.get('p3_status') == 'INACTIVE':
+            prompts.append(get_text('p3_join_prompt_2pads'))
+        if game_settings.get('p4_status') == 'INACTIVE':
+            prompts.append(get_text('p4_join_prompt_2pads'))
+    elif num_gamepads == 3:
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_2pads'))
+        if game_settings.get('p3_status') == 'INACTIVE':
+            prompts.append(get_text('p3_join_prompt_3plus_pads'))
+        if game_settings.get('p4_status') == 'INACTIVE':
+            prompts.append(get_text('p4_join_prompt_3pads'))
+    elif num_gamepads >= 4:
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_2pads'))
+        if game_settings.get('p3_status') == 'INACTIVE':
+            prompts.append(get_text('p3_join_prompt_3plus_pads'))
+        if game_settings.get('p4_status') == 'INACTIVE':
+            prompts.append(get_text('p4_join_prompt_4pads'))
     
     if prompts:
         base_y = screen.get_height() - 30 - (len(prompts) - 1) * 30
@@ -418,60 +486,111 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
 
     return panel_rects_to_return
 
-def draw_settings_menu(screen, game_settings, selected_index, option_keys, key_map, num_gamepads):
+def draw_settings_menu(screen, game_settings, selected_index, option_keys, key_map, vibration_is_allowed):
+    """
+    Draw the settings menu overlay.
+    """
     font_title = pygame.font.Font(None, 50)
     font_option = pygame.font.Font(None, 36)
     
-    # Draw dark background
-    draw_background(screen, dark=True)
+    # Draw a semi-transparent overlay to dim the background
+    overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    screen.blit(overlay, (0, 0))
     
-    # Draw settings title
+    # Draw the settings title
     title_text = font_title.render(get_text('settings_title'), True, settings.WHITE)
     title_rect = title_text.get_rect(centerx=screen.get_width() // 2, y=50)
     screen.blit(title_text, title_rect)
     
-    # Dictionary of current setting values to display
+    # Define the display text for each setting's value
     options_values = {
         "language": f"{'English' if game_settings.get('language') == 'en' else 'Français'}",
         "round_duration": f"{game_settings.get('round_duration', 30)}s",
-        # ... (rest of settings values)
+        "winning_score": f"{game_settings.get('winning_score', 3)}",
+        "map_width": f"{game_settings.get('map_width', 15)}m",
+        "wac_ratio": f"{game_settings.get('wac_ratio', 1.0):.1f}",
+        "slope_correction": get_text('on_label') if game_settings.get('slope_correction') else get_text('off_label'),
+        "brake_correction": get_text('on_label') if game_settings.get('brake_correction') else get_text('off_label'),
+        "vc_speed": get_text('on_label') if game_settings.get('vc_speed') else get_text('off_label'),
+        "infinity_map": get_text('on_label') if game_settings.get('infinity_map') else get_text('off_label'),
+        "vibration_mode": get_text('on_label') if game_settings.get('vibration_mode') else get_text('off_label'),
+        "ai_enabled": get_text('on_label') if game_settings.get('ai_enabled') else get_text('off_label'),
         "quit_game": ""
     }
     
-    # Loop through and draw each setting option
+    # Draw each option line
     for i, key_label in enumerate(option_keys):
         key = key_map[key_label]
         value = options_values[key]
+        
         text_label = get_text(key_label)
         
-        option_text = f"{text_label}: {value}" if key != "quit_game" else text_label
+        if key == "quit_game":
+            option_text = text_label
+        else:
+            option_text = f"{text_label}: {value}"
             
-        # Highlight the selected option
+        # Highlight the selected option and grey out disabled ones
         color = (255, 255, 100) if i == selected_index else settings.WHITE
-        if key == "vibration_mode" and num_gamepads < 2: color = (100, 100, 100) # Grey out if not available
-        elif key == "quit_game": color = (255, 100, 100) if i == selected_index else (200, 50, 50)
+        if key == "vibration_mode" and not vibration_is_allowed:
+            color = (100, 100, 100)
+        elif key == "quit_game":
+            color = (255, 100, 100) if i == selected_index else (200, 50, 50)
             
         text_surf = font_option.render(option_text, True, color)
         text_rect = text_surf.get_rect(centerx=screen.get_width() // 2, y=150 + i * 50)
         screen.blit(text_surf, text_rect)
         
-    # Draw help text at the bottom
+    # Draw the prompt to close the menu
     help_text = font_option.render(get_text('settings_close_prompt'), True, (150, 150, 150))
     help_rect = help_text.get_rect(centerx=screen.get_width() // 2, bottom=screen.get_height() - 40)
     screen.blit(help_text, help_rect)
 
+def draw_pause_menu(screen, selected_index):
+    """
+    Draw the pause menu overlay during a game.
+    """
+    font_title = pygame.font.Font(None, 70)
+    font_option = pygame.font.Font(None, 50)
+    
+    # Draw a semi-transparent overlay
+    overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    screen.blit(overlay, (0,0))
+
+    # Draw the title
+    title_surf = font_title.render(get_text('pause_title'), True, settings.WHITE)
+    title_rect = title_surf.get_rect(centerx=screen.get_width() / 2, y=screen.get_height() * 0.2)
+    screen.blit(title_surf, title_rect)
+
+    # Draw the options
+    options = ['resume_label', 'return_to_menu_label', 'quit_game_label']
+    for i, opt_key in enumerate(options):
+        color = (255, 255, 100) if i == selected_index else settings.WHITE
+        if opt_key == 'quit_game_label':
+            color = (255, 100, 100) if i == selected_index else (200, 50, 50)
+
+        option_surf = font_option.render(get_text(opt_key), True, color)
+        option_rect = option_surf.get_rect(centerx=screen.get_width() / 2, y=screen.get_height() * 0.4 + i * 80)
+        screen.blit(option_surf, option_rect)
+
 def draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings):
+    """
+    Draw the end-of-game summary screen.
+    """
     font_winner = pygame.font.Font(None, 100)
     font_score = pygame.font.Font(None, 60)
     font_prompt = pygame.font.Font(None, 40)
 
-    # Determine the winner
     predators = [p for p in players if p.role == 'predator']
     preys = [p for p in players if p.role == 'prey']
+    
     predators_final_score = scores.get(predators[0].id, 0) if predators else 0
     preys_final_score = scores.get(preys[0].id, 0) if preys else 0
     winning_score = game_settings.get('winning_score', 3)
 
+    # Determine the winner text
     winner_text_str = get_text('equality_label').upper()
     winner_color = settings.WHITE
     if predators_final_score >= winning_score:
@@ -481,10 +600,10 @@ def draw_game_over_screen(screen, clock, gamepads, players, scores, game_setting
         winner_text_str = get_text('preys_win_label').upper() if len(preys) > 1 else get_text('prey_wins_label').upper()
         winner_color = (settings.COLOR_PREY)
 
-    # Draw winner text, final score, and prompt to return to menu
     winner_text = font_winner.render(winner_text_str, True, winner_color)
     score_text_str = f"{get_text('predators_label')} : {predators_final_score}   |   {get_text('preys_label')} : {preys_final_score}"
     score_text = font_score.render(score_text_str, True, settings.WHITE)
+    
     prompt_string = get_text('return_to_menu_prompt_keyboard') if not gamepads else get_text('return_to_menu_prompt_gamepad')
     prompt_text = font_prompt.render(prompt_string, True, (200, 200, 200))
 
@@ -492,59 +611,41 @@ def draw_game_over_screen(screen, clock, gamepads, players, scores, game_setting
     score_rect = score_text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 + 50))
     prompt_rect = prompt_text.get_rect(center=(screen.get_width() // 2, screen.get_height() - 60))
 
-    # This loop keeps the game over screen visible until the player confirms
+    # Loop to wait for confirmation to return to menu
+    last_confirm_press = True
     running = True
     while running:
-        # ... event handling ...
-        draw_background(screen, dark=True)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+        confirm_pressed = get_confirm_action(gamepads)
+        if confirm_pressed and not last_confirm_press:
+            running = False
+        last_confirm_press = confirm_pressed
+        
+        # Draw the screen elements
+        screen.fill(settings.BLACK)
         screen.blit(winner_text, winner_rect)
         screen.blit(score_text, score_rect)
         screen.blit(prompt_text, prompt_rect)
         pygame.display.flip()
         clock.tick(settings.FPS)
 
-def draw_pause_menu(screen, selected_index):
-    """
-    Draws the pause menu over the screen.
-    """
-    font_title = pygame.font.Font(None, 70)
-    font_option = pygame.font.Font(None, 50)
-    
-    # Draw a semi-transparent overlay to dim the game
-    overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 180))
-    screen.blit(overlay, (0, 0))
-    
-    # Draw pause menu title
-    title_text = font_title.render(get_text('pause_title'), True, settings.WHITE)
-    title_rect = title_text.get_rect(centerx=screen.get_width() // 2, y=screen.get_height() * 0.25)
-    screen.blit(title_text, title_rect)
-    
-    # Draw menu options, highlighting the selected one
-    option_keys = ['resume_label', 'return_to_menu_label', 'quit_game_label']
-    for i, key in enumerate(option_keys):
-        color = (255, 255, 100) if i == selected_index else settings.WHITE
-        if key == 'quit_game_label':
-            color = (255, 100, 100) if i == selected_index else (200, 50, 50)
-            
-        text_surf = font_option.render(get_text(key), True, color)
-        text_rect = text_surf.get_rect(centerx=screen.get_width() // 2, y=title_rect.bottom + 80 + i * 60)
-        screen.blit(text_surf, text_rect)
-
 
 def draw_killcam_hud(screen, top_text, bottom_text, bottom_text_color):
     """
-    Draws the "Killcam" and "Catch!"/"Escape!" text during the replay.
+    Draw the heads-up display during the killcam replay.
     """
     top_font = pygame.font.Font(None, 80)
     bottom_font = pygame.font.Font(None, 120)
     
-    # Draw "Killcam" text at the top
+    # Draw the top text (e.g., "Killcam")
     top_surf = top_font.render(top_text, True, settings.WHITE)
     top_rect = top_surf.get_rect(center=(screen.get_width() // 2, 60))
     screen.blit(top_surf, top_rect)
     
-    # Draw the main event text (e.g., "Catch!") in the center
+    # Draw the bottom text (e.g., "Catch!", "Escape!")
     bottom_surf = bottom_font.render(bottom_text, True, bottom_text_color)
     bottom_rect = bottom_surf.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
     bg_rect = bottom_rect.inflate(20, 20)

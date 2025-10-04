@@ -14,7 +14,7 @@
 import pygame
 import settings
 import random
-from commands import get_player_action, get_pause_action, get_menu_nav_action, get_confirm_action
+from commands import get_menu_inputs, get_player_action, get_pause_action
 from ui import draw_game_info, draw_game_over_screen, draw_pause_menu
 from killcam import play_killcam
 from ai import get_ai_inputs
@@ -22,9 +22,9 @@ from transitions import play_start_transition, play_round_reset_transition
 import logs
 from renderer import draw_background
 
-def get_shortest_distance(p1, p2, map_width):
+def _get_shortest_distance(p1, p2, map_width):
     """
-    Calculate the shortest distance between two players.
+    (Internal) Calculate the shortest distance between two players, wrapping around the map if infinite.
     """
     dx = abs(p1.x - p2.x)
     dy = abs(p1.y - p2.y)
@@ -36,68 +36,78 @@ def get_shortest_distance(p1, p2, map_width):
         
     return pygame.Vector2(dx, dy).length()
 
-def handle_vibrations(players, gamepads, game_settings):
+def _handle_vibrations(players, gamepads, game_settings):
     """
-    Calculate and apply controller vibrations based on player proximity and orientation.
+    (Internal) Calculate and apply controller vibrations based on player proximity.
+    This function only runs if 'vibration_mode' is ON.
     """
+    # If vibration mode is globally disabled, do nothing.
     if not game_settings.get('vibration_mode', False) or not gamepads:
+        # Stop any lingering vibrations
+        for gamepad in gamepads:
+            gamepad.rumble(0, 0, 0)
         return
 
+    num_gamepads = len(gamepads)
     map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
     max_vibration_dist = map_width * settings.VIBRATION_DISTANCE_RATIO
     if max_vibration_dist <= 0: return
 
-    for i, gamepad in enumerate(gamepads):
-        player_id = i + 1
-        current_player = next((p for p in players if p.id == player_id), None)
-        
-        if not current_player or not current_player.is_active:
-            gamepad.rumble(0, 0, 0)
-            continue
+    # Helper to map player ID to a gamepad and motor side ('left' or 'right')
+    def get_player_gamepad_and_motor(player_id):
+        if num_gamepads == 1:
+            if player_id == 1: return 0, 'left'
+            if player_id == 2: return 0, 'right'
+        elif num_gamepads == 2:
+            if player_id == 1: return 0, 'left'
+            if player_id == 2: return 1, 'left'
+            if player_id == 3: return 0, 'right'
+            if player_id == 4: return 1, 'right'
+        elif num_gamepads == 3:
+            if player_id == 1: return 0, 'left'
+            if player_id == 2: return 1, 'left'
+            if player_id == 3: return 2, 'left'
+            if player_id == 4: return 0, 'right'
+        elif num_gamepads >= 4:
+            if player_id <= num_gamepads:
+                return player_id - 1, 'left' # Assume left stick for all
+        return None, None
 
+    # Initialize rumble values for each gamepad
+    gamepad_rumble = {i: {'left': 0.0, 'right': 0.0} for i in range(num_gamepads)}
+
+    active_human_players = [p for p in players if p.is_active and not p.is_ai]
+
+    for current_player in active_human_players:
         opponents = [p for p in players if p.is_active and p.role != current_player.role]
         if not opponents:
-            gamepad.rumble(0, 0, 0)
             continue
-            
-        closest_opponent = min(opponents, key=lambda o: get_shortest_distance(current_player, o, map_width) if game_settings.get('infinity_map') else pygame.Vector2(current_player.x, current_player.y).distance_to((o.x, o.y)))
-        
-        if game_settings.get('infinity_map'):
-            distance = get_shortest_distance(current_player, closest_opponent, map_width)
-        else:
-            distance = pygame.Vector2(current_player.x, current_player.y).distance_to((closest_opponent.x, closest_opponent.y))
 
+        # Find the closest opponent
+        closest_opponent = min(opponents, key=lambda o: _get_shortest_distance(current_player, o, map_width) if game_settings.get('infinity_map') else pygame.Vector2(current_player.x, current_player.y).distance_to((o.x, o.y)))
+        
+        distance = _get_shortest_distance(current_player, closest_opponent, map_width) if game_settings.get('infinity_map') else pygame.Vector2(current_player.x, current_player.y).distance_to((closest_opponent.x, closest_opponent.y))
+
+        # If opponent is close, calculate intensity and apply rumble
         if distance < max_vibration_dist:
             intensity = 1.0 - (distance / max_vibration_dist)
-            
-            player_pos = pygame.Vector2(current_player.x, current_player.y)
-            opponent_pos = pygame.Vector2(closest_opponent.x, closest_opponent.y)
-            
-            vec_to_opponent = opponent_pos - player_pos
-            
-            if game_settings.get('infinity_map'):
-                if vec_to_opponent.x > map_width / 2: vec_to_opponent.x -= map_width
-                if vec_to_opponent.x < -map_width / 2: vec_to_opponent.x += map_width
-                if vec_to_opponent.y > map_width / 2: vec_to_opponent.y -= map_width
-                if vec_to_opponent.y < -map_width / 2: vec_to_opponent.y += map_width
+            gamepad_index, _ = get_player_gamepad_and_motor(current_player.id)
 
-            angle_to_opponent = current_player.last_direction.angle_to(vec_to_opponent)
+            if gamepad_index is not None:
+                # In vibration mode, both motors always rumble for proximity
+                gamepad_rumble[gamepad_index]['left'] = max(gamepad_rumble[gamepad_index]['left'], intensity)
+                gamepad_rumble[gamepad_index]['right'] = max(gamepad_rumble[gamepad_index]['right'], intensity)
 
-            left_motor, right_motor = 0.0, 0.0
-            if -45 <= angle_to_opponent <= 45:
-                left_motor = right_motor = intensity
-            elif 45 < angle_to_opponent <= 135:
-                left_motor = intensity
-            elif -135 <= angle_to_opponent < -45:
-                right_motor = intensity
-            
-            gamepad.rumble(left_motor, right_motor, 200)
+    # Apply the calculated rumble values to each gamepad
+    for i, rumble_values in gamepad_rumble.items():
+        if rumble_values['left'] > 0 or rumble_values['right'] > 0:
+            gamepads[i].rumble(rumble_values['left'], rumble_values['right'], 200)
         else:
-            gamepad.rumble(0, 0, 0)
+            gamepads[i].rumble(0, 0, 0)
 
-def reset_players_positions(players, game_settings):
+def _reset_players_positions(players, game_settings):
     """
-    Place the prey and predators on the map.
+    (Internal) Place the prey and predators on the map randomly.
     """
     map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
     half_map_width = map_width / 2
@@ -133,48 +143,46 @@ def reset_players_positions(players, game_settings):
         player.acceleration = pygame.Vector2(0, 0)
         player.is_active = True
 
-def check_collision(player1, player2, game_settings):
+def _check_collision(player1, player2, game_settings):
     """
-    Check if the two players are touching.
+    (Internal) Check if the two players are touching.
     """
     distance = pygame.Vector2(player1.x, player1.y).distance_to(pygame.Vector2(player2.x, player2.y))
     collision_threshold = game_settings.get('map_width', settings.MAP_WIDTH_METERS) * settings.COLLISION_DISTANCE
     return distance < collision_threshold
 
-def pause_menu(screen, clock, gamepads):
+def _pause_menu_loop(screen, clock, gamepads):
     """
-    Handles the pause menu loop.
-    Returns the selected action: 'RESUME', 'MENU', or 'QUIT'.
+    (Internal) Handles the pause menu logic. Returns the chosen action.
     """
     selected_index = 0
-    options = ['RESUME', 'MENU', 'QUIT']
-    
     last_nav_y = 0
-    last_confirm_button = True
-    last_pause_button = True
+    last_confirm_press = True
 
-    paused = True
-    while paused:
+    running = True
+    while running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return 'QUIT'
-
-        nav_y = get_menu_nav_action(gamepads)
+            if event.type == pygame.QUIT: return "QUIT"
+        
+        # --- INPUTS ---
+        menu_actions = get_menu_inputs(gamepads)
+        nav_y = - menu_actions['map_nav_y']
+        confirm_pressed = menu_actions['open_settings'] 
+        
         if nav_y != 0 and last_nav_y == 0:
-            selected_index = (selected_index + nav_y + len(options)) % len(options)
+            selected_index = (selected_index + nav_y + 3) % 3
         
-        confirm_pressed = get_confirm_action(gamepads)
-        if confirm_pressed and not last_confirm_button:
-            return options[selected_index]
-        
-        pause_pressed = get_pause_action(gamepads)
-        if pause_pressed and not last_pause_button:
-            return 'RESUME'
+        if confirm_pressed and not last_confirm_press:
+            if selected_index == 0:
+                return "RESUME"
+            elif selected_index == 1:
+                return "RETURN_TO_MENU"
+            elif selected_index == 2:
+                return "QUIT"
         
         last_nav_y = nav_y
-        last_confirm_button = confirm_pressed
-        last_pause_button = pause_pressed
-
+        last_confirm_press = confirm_pressed
+        
         draw_pause_menu(screen, selected_index)
         pygame.display.flip()
         clock.tick(settings.FPS)
@@ -183,17 +191,17 @@ def pause_menu(screen, clock, gamepads):
 def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, initial_map_rotation, panel_rects):
     """
     Manage the entire game.
-    Returns 'MENU' to go back to the menu, or 'QUIT' to exit the game.
     """
     map_rotation_angle = initial_map_rotation
     surface_data = game_settings['surface_data']
     
     scores = {p.id: 0 for p in players}
     
-    reset_players_positions(players, game_settings)
+    _reset_players_positions(players, game_settings)
     play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, panel_rects)
 
     last_pause_press = True
+
     game_over = False
     while not game_over:
         
@@ -205,29 +213,27 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
         while round_running:
             dt = clock.tick(settings.FPS) / 1000.0
             if dt == 0: continue
-            
-            pause_pressed = get_pause_action(gamepads)
-            if pause_pressed and not last_pause_press:
-                action = pause_menu(screen, clock, gamepads)
-                if action == 'MENU':
-                    return 'MENU'
-                elif action == 'QUIT':
-                    return 'QUIT'
-                last_pause_press = True
-            else:
-                last_pause_press = pause_pressed
-
             round_time += dt
 
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: return 'QUIT'
+                if event.type == pygame.QUIT:
+                    return "QUIT", None
+
+            pause_pressed = get_pause_action(gamepads)
+            if pause_pressed and not last_pause_press:
+                action = _pause_menu_loop(screen, clock, gamepads)
+                if action == "RETURN_TO_MENU":
+                    return "RETURN_TO_MENU", None
+                elif action == "QUIT":
+                    return "QUIT", None
+            last_pause_press = pause_pressed
 
             active_players_list = [p for p in players if p.is_active]
             for player in active_players_list:
                 action = get_ai_inputs(player, active_players_list, game_settings) if player.is_ai else get_player_action(player.id, gamepads, map_rotation_angle)
                 player.update(action['direction'], action['intensity'], dt, surface_data, game_settings)
             
-            handle_vibrations(active_players_list, gamepads, game_settings)
+            _handle_vibrations(active_players_list, gamepads, game_settings)
             logs.add_frame_to_round(round_data, players, round_time, surface_data, game_settings)
 
             predators = [p for p in active_players_list if p.role == 'predator']
@@ -235,7 +241,7 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
                 remaining_prey = [p for p in active_players_list if p.role == 'prey']
                 for prey in remaining_prey:
                     for predator in predators:
-                        if check_collision(predator, prey, game_settings):
+                        if _check_collision(predator, prey, game_settings):
                             prey.is_active = False
                             capture_events.append({'time': round_time, 'predator_id': predator.id, 'prey_id': prey.id})
                             break
@@ -272,10 +278,9 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
             game_over = True
             play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, round_winner_role, capture_events, game_settings)
         else:
-            reset_players_positions(players, game_settings)
-            
             last_world_positions = play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, round_winner_role, capture_events, game_settings)
-
+            _reset_players_positions(players, game_settings)
+            
             if last_world_positions:
                 last_screen_positions = {}
                 for pid, pos_data in last_world_positions.items():
@@ -292,4 +297,4 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     logs.finalize_game_data(game_data, scores, players, game_settings.get('winning_score', 3))
     draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings)
     
-    return 'MENU'
+    return "RETURN_TO_MENU", scores

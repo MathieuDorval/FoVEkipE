@@ -21,6 +21,15 @@ from commands import get_menu_inputs
 from menu_settings import menu_settings_loop
 from language import get_text
 
+def _get_player_gamepad_map(num_gamepads):
+    """(Internal) Returns a dictionary mapping player IDs to their gamepad index."""
+    if num_gamepads == 0: return {}
+    if num_gamepads == 1: return {1: 0, 2: 0, 3: -1, 4: -1}
+    if num_gamepads == 2: return {1: 0, 2: 1, 3: 0, 4: 1}
+    if num_gamepads == 3: return {1: 0, 2: 1, 3: 2, 4: 0}
+    if num_gamepads >= 4: return {1: 0, 2: 1, 3: 2, 4: 3}
+    return {}
+
 def menu_loop(screen, clock, gamepads, game_settings):
     """
     Handle the main menu.
@@ -38,6 +47,8 @@ def menu_loop(screen, clock, gamepads, game_settings):
     selected_map_name = game_settings['map_name']
     surface_data = generate_terrain(selected_map_name, settings.MAP_POINTS, settings.MAP_POINTS, game_settings)
     map_renderer = MapRenderer(screen, screen.get_rect(), surface_data, game_settings)
+    
+    gamepad_map = _get_player_gamepad_map(len(gamepads))
 
     selecting = True
     while selecting:
@@ -69,8 +80,22 @@ def menu_loop(screen, clock, gamepads, game_settings):
         for i in range(1, 5):
             if menu_actions[f'p{i}_toggle_active'] and not last_inputs.get(f'p{i}_toggle_active', False):
                 current_status = game_settings[f'p{i}_status']
+                
                 if current_status == "INACTIVE":
+                    if game_settings['vibration_mode']:
+                        target_gamepad = gamepad_map.get(i)
+                        is_conflict = False
+                        if target_gamepad is not None and target_gamepad != -1:
+                            active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
+                            for p_id in active_players:
+                                if gamepad_map.get(p_id) == target_gamepad:
+                                    is_conflict = True
+                                    break
+                        if is_conflict:
+                            continue
+                    
                     game_settings[f'p{i}_status'] = "PLAYER"
+
                 elif current_status == "PLAYER" and game_settings['ai_enabled']:
                     game_settings[f'p{i}_status'] = "AI"
                 else:
@@ -153,11 +178,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
                 role_error_message = get_text('error_min_1_predator'); error = True
             elif 'prey' not in roles:
                 role_error_message = get_text('error_min_1_prey'); error = True
-            elif game_settings['vibration_mode']:
-                num_human_players = len([p for p in final_active_players if game_settings[f'p{p}_status'] == 'PLAYER'])
-                if num_human_players > len(gamepads):
-                    role_error_message = get_text('error_vibration_mode'); error = True
-
+            
             if error:
                 role_error_timer = 3.0
                 p_ready = {p: False for p in range(1, 5)}
@@ -169,7 +190,7 @@ def menu_loop(screen, clock, gamepads, game_settings):
             surface_data = generate_terrain(selected_map_name, settings.MAP_POINTS, settings.MAP_POINTS, game_settings)
             map_renderer.update_map_data(surface_data, game_settings)
             
-        draw_background(screen, dark=False)
+        draw_background(screen)
         map_renderer.draw_map(map_rotation_angle, game_settings)
         panel_rects = draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message, len(gamepads))
         pygame.display.flip()

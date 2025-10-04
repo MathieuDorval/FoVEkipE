@@ -109,10 +109,7 @@ def calculate_physics_update(player, direction_vector, intensity, dt, slope_angl
     else:
         dWac = (new_velocity.length() - Vc) * dt
 
-    if dWac > 0 :
-        dWac *= wac_ratio_setting
-    elif dWac < 0:
-        dWac /= wac_ratio_setting if wac_ratio_setting > 0 else 1
+    dWac *= wac_ratio_setting
 
     new_wac = min(WacMax, max(0, current_wac + dWac))
     
