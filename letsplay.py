@@ -20,6 +20,7 @@ from killcam import play_killcam
 from ai import get_ai_inputs
 from transitions import play_start_transition, play_round_reset_transition
 import logs
+from renderer import draw_background
 
 def get_shortest_distance(p1, p2, map_width):
     """
@@ -199,7 +200,7 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
                     scores[p.id] += 1
                 round_running = False
 
-            screen.fill(settings.BLACK)
+            draw_background(screen, dark=True)
             map_renderer.draw_map(map_rotation_angle, game_settings)
             
             active_players_list = [p for p in players if p.is_active]
@@ -239,3 +240,4 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings)
     
     return True
+

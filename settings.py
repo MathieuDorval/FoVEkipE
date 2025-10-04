@@ -26,6 +26,14 @@ FPS                     = 60    # Update per second
 # --- COLOR ---
 BLACK                   = (0, 0, 0)
 WHITE                   = (255, 255, 255)
+# Bright gradient for the main menu
+GRADIENT_COLOR_TOP      = (4, 1, 32)
+GRADIENT_COLOR_MIDDLE   = (31, 1, 60)
+GRADIENT_COLOR_BOTTOM   = (68, 1, 93)
+# Dark gradient for in-game, settings, etc.
+GRADIENT_DARK_COLOR_TOP = (2, 0, 16)
+GRADIENT_DARK_COLOR_MIDDLE= (15, 0, 30)
+GRADIENT_DARK_COLOR_BOTTOM= (34, 0, 46)
 SURFACE_COLOR           = (120, 100, 150)
 PLAYER_COLORS = {
     1: {'predator': (231, 76, 60),  'prey': (155, 89, 182)},
@@ -76,3 +84,4 @@ AI_ENABLED              = False
 INFINITY_MAP            = False
 VIBRATION_MODE          = False
 VIBRATION_DISTANCE_RATIO= 0.5   # Distance from which vibrations start (as a percentage)
+

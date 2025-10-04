@@ -14,7 +14,7 @@
 import pygame
 import settings
 from maps import generate_terrain
-from renderer import MapRenderer
+from renderer import MapRenderer, draw_background
 from ui import draw_menu
 from animals import ANIMALS
 from commands import get_menu_inputs
@@ -169,9 +169,10 @@ def menu_loop(screen, clock, gamepads, game_settings):
             surface_data = generate_terrain(selected_map_name, settings.MAP_POINTS, settings.MAP_POINTS, game_settings)
             map_renderer.update_map_data(surface_data, game_settings)
             
-        screen.fill(settings.BLACK)
+        draw_background(screen, dark=False)
         map_renderer.draw_map(map_rotation_angle, game_settings)
         panel_rects = draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message, len(gamepads))
         pygame.display.flip()
 
     return False, 0, {}
+

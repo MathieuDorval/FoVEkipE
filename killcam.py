@@ -20,6 +20,7 @@ import copy
 
 from ui import draw_killcam_hud
 from language import get_text
+from renderer import draw_background
 
 class Particle:
     def __init__(self, x, y, z, color):
@@ -116,7 +117,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                             kill_pos_z = (map_renderer.get_z(kill_pos_x, kill_pos_y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
                             all_particles.extend([Particle(kill_pos_x, kill_pos_y, kill_pos_z, prey_data['color']) for _ in range(settings.KILLCAM_N_PARTICLES)])
 
-            screen.fill(settings.BLACK)
+            draw_background(screen, dark=True)
             map_renderer.draw_map(map_rotation_angle, game_settings)
             
             for key, p_data in game_data['players'].items():
@@ -178,7 +179,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                             kill_pos_z = (map_renderer.get_z(kill_pos_x, kill_pos_y) + settings.PLAYER_Z_OFFSET) * settings.Z_BOOST_FACTOR
                             all_particles.extend([Particle(kill_pos_x, kill_pos_y, kill_pos_z, prey_data['color']) for _ in range(settings.KILLCAM_N_PARTICLES)])
 
-            screen.fill(settings.BLACK)
+            draw_background(screen, dark=True)
             map_renderer.draw_map(map_rotation_angle, game_settings)
             
             for key, p_data in game_data['players'].items():
@@ -216,7 +217,7 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
         while explosion_time < 1.5:
             dt = clock.tick(settings.FPS) / 1000.0
             explosion_time += dt
-            screen.fill(settings.BLACK)
+            draw_background(screen, dark=True)
             map_renderer.draw_map(map_rotation_angle, game_settings)
             for key, p_data in game_data['players'].items():
                 if p_data['role'] == 'prey' and all(event['prey_id'] != int(key.split('_')[-1]) for event in capture_events):
@@ -256,3 +257,4 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 final_positions[player_id] = {'x': pos_x, 'y': pos_y}
 
     return final_positions
+

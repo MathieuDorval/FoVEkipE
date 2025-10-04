@@ -13,6 +13,7 @@
 
 import pygame
 import settings
+from renderer import draw_background
 
 def play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, panel_rects):
     """
@@ -42,7 +43,7 @@ def play_start_transition(screen, clock, players, map_renderer, map_rotation_ang
     while running:
         elapsed_time = (pygame.time.get_ticks() - start_time) / 1000.0
         
-        screen.fill(settings.BLACK)
+        draw_background(screen, dark=True)
         map_renderer.draw_map(map_rotation_angle, map_renderer.game_settings)
 
         for anim in player_animations:
@@ -118,7 +119,7 @@ def play_round_reset_transition(screen, clock, players, map_renderer, map_rotati
         progress = min(elapsed_time / duration, 1.0)
         eased_progress = progress * progress * (3 - 2 * progress)
 
-        screen.fill(settings.BLACK)
+        draw_background(screen, dark=True)
         map_renderer.draw_map(map_rotation_angle, map_renderer.game_settings)
 
         for anim in player_animations:
@@ -135,3 +136,4 @@ def play_round_reset_transition(screen, clock, players, map_renderer, map_rotati
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+

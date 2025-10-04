@@ -17,6 +17,7 @@ from animals import ANIMALS
 from commands import get_confirm_action
 import math
 from language import get_text
+from renderer import draw_background
 
 ANIMAL_IMAGES = {}
 
@@ -387,10 +388,6 @@ def draw_settings_menu(screen, game_settings, selected_index, option_keys, key_m
     font_title = pygame.font.Font(None, 50)
     font_option = pygame.font.Font(None, 36)
     
-    overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 200))
-    screen.blit(overlay, (0, 0))
-    
     title_text = font_title.render(get_text('settings_title'), True, settings.WHITE)
     title_rect = title_text.get_rect(centerx=screen.get_width() // 2, y=50)
     screen.blit(title_text, title_rect)
@@ -478,7 +475,7 @@ def draw_game_over_screen(screen, clock, gamepads, players, scores, game_setting
         if confirm_pressed and not last_confirm_press:
             running = False
         last_confirm_press = confirm_pressed
-        screen.fill(settings.BLACK)
+        draw_background(screen, dark=True)
         screen.blit(winner_text, winner_rect)
         screen.blit(score_text, score_rect)
         screen.blit(prompt_text, prompt_rect)

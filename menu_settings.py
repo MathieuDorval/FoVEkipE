@@ -16,6 +16,7 @@ import settings
 from commands import get_menu_inputs
 from ui import draw_settings_menu
 from language import set_language
+from renderer import draw_background
 
 # Currently many options, needs cleaning for the final game
 def menu_settings_loop(screen, clock, gamepads, game_settings):
@@ -114,9 +115,10 @@ def menu_settings_loop(screen, clock, gamepads, game_settings):
         last_nav_x = nav_x
         last_select_button = menu_actions['open_settings']
         
-        screen.fill(settings.BLACK)
+        draw_background(screen, dark=True)
         draw_settings_menu(screen, game_settings, selected_index, option_keys, key_map, len(gamepads))
         pygame.display.flip()
         clock.tick(settings.FPS)
     
     return None
+
