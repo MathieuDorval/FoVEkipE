@@ -32,9 +32,15 @@ def main():
     if settings.FULLSCREEN:
         screen_flags = pygame.NOFRAME
         desktop_sizes = pygame.display.get_desktop_sizes()
+        
+        screen_index = settings.DISPLAY_SCREEN
+        if screen_index < 0 or screen_index >= len(desktop_sizes):
+            print(f"Warning: Screen {screen_index} not available. Defaulting to screen 0.")
+            screen_index = 0
+
         if desktop_sizes:
-            screen_size = desktop_sizes[0]  # → Selecting the screen to launch the game on
-            screen = pygame.display.set_mode(screen_size, screen_flags)
+            screen_size = desktop_sizes[screen_index]
+            screen = pygame.display.set_mode(screen_size, screen_flags, display=screen_index)
         else:
             screen_flags = pygame.FULLSCREEN
             screen = pygame.display.set_mode((0, 0), screen_flags)

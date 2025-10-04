@@ -8,7 +8,7 @@
 #   \ \ \_\ \  \ \ \  
 #    \ \_____\  \ \_\ 
 #     \/_____/   \/_/
-#   (version 03/10)
+#   (version 04/10)
 #   → Manages the on-screen display
 
 import pygame
@@ -143,7 +143,7 @@ def draw_game_info(screen, scores, round_time, players, round_duration):
     draw_wac_bars(preys, right_zone_rect, align_right=True)
 
 
-def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, focus_level, cursor_pos):
+def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, focus_level, cursor_pos, num_gamepads=0):
     font_large = pygame.font.Font(None, 32)
     
     status = game_settings.get(f'p{player_id}_status', "INACTIVE")
@@ -171,6 +171,30 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
     screen.blit(title_surf, title_pos)
 
     is_human_player = status == "PLAYER"
+    
+    if not (is_human_player and is_ready) and focus_level == 0:
+        arrow_color = settings.WHITE
+        arrow_size = title_surf.get_height() * 0.4
+        arrow_padding = 10
+        screen_width = screen.get_width()
+
+        if base_rect.centerx > screen_width / 2: # Pannel is on the right (prey)
+            # Left arrow
+            left_arrow_points = [
+                (title_pos.left - arrow_padding - arrow_size, title_pos.centery),
+                (title_pos.left - arrow_padding, title_pos.centery - arrow_size / 2),
+                (title_pos.left - arrow_padding, title_pos.centery + arrow_size / 2)
+            ]
+            pygame.draw.polygon(screen, arrow_color, left_arrow_points)
+        else: # Pannel is on the left (predator)
+            # Right arrow
+            right_arrow_points = [
+                (title_pos.right + arrow_padding + arrow_size, title_pos.centery),
+                (title_pos.right + arrow_padding, title_pos.centery - arrow_size / 2),
+                (title_pos.right + arrow_padding, title_pos.centery + arrow_size / 2)
+            ]
+            pygame.draw.polygon(screen, arrow_color, right_arrow_points)
+
     if not (is_human_player and is_ready):
         highlight_rect = top_rect if focus_level == 0 else bottom_rect
         highlight_surf = pygame.Surface(highlight_rect.size, pygame.SRCALPHA)
@@ -178,7 +202,8 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
         screen.blit(highlight_surf, highlight_rect.topleft)
 
     confirmed_animal_idx = game_settings.get(f'p{player_id}_animal_index', 0)
-    preview_animal_idx = cursor_pos
+    
+    preview_animal_idx = cursor_pos if focus_level == 1 and not (is_human_player and is_ready) else confirmed_animal_idx
     preview_animal = ANIMALS[preview_animal_idx]
     
     if preview_animal['name'] in ANIMAL_IMAGES:
@@ -218,17 +243,47 @@ def draw_player_panel(screen, player_id, base_rect, game_settings, is_ready, foc
             icon_rect = pygame.Rect(0, 0, icon_size, icon_size)
             icon_rect.center = (cell_x + cell_w / 2, cell_y + cell_h / 2)
             
-            if animal['name'] in ANIMAL_IMAGES:
-                source_icon = ANIMAL_IMAGES[animal['name']]['source']
-                scaled_icon = pygame.transform.scale(source_icon, (icon_size, icon_size))
-                screen.blit(scaled_icon, icon_rect.topleft)
+            is_hovered = not (is_human_player and is_ready) and focus_level == 1 and i == cursor_pos
+
+            if is_hovered:
+                confirm_button_text = ""
+                if num_gamepads == 0:
+                    if player_id == 1: confirm_button_text = "SPACE"
+                    elif player_id == 2: confirm_button_text = "ENT"
+                elif num_gamepads == 1:
+                    if player_id == 1: confirm_button_text = "LT"
+                    elif player_id == 2: confirm_button_text = "RT"
+                elif num_gamepads == 2:
+                    if player_id in [1, 2]: confirm_button_text = "LT"
+                    elif player_id in [3, 4]: confirm_button_text = "RT"
+                elif num_gamepads == 3:
+                    if player_id in [1, 2, 3]: confirm_button_text = "LT"
+                    elif player_id == 4: confirm_button_text = "RT"
+                elif num_gamepads >= 4:
+                    if player_id in [1, 2, 3, 4]: confirm_button_text = "LT"
+
+                if confirm_button_text:
+                    font_size_button = int(icon_size * 0.6) if len(confirm_button_text) <= 2 else int(icon_size * 0.4)
+                    font_button_small = pygame.font.Font(None, font_size_button)
+                    text_surf = font_button_small.render(confirm_button_text, True, settings.WHITE)
+                    text_rect = text_surf.get_rect(center=icon_rect.center)
+                    screen.blit(text_surf, text_rect)
+                else:
+                    if animal['name'] in ANIMAL_IMAGES:
+                        source_icon = ANIMAL_IMAGES[animal['name']]['source']
+                        scaled_icon = pygame.transform.scale(source_icon, (icon_size, icon_size))
+                        screen.blit(scaled_icon, icon_rect.topleft)
+            else:
+                if animal['name'] in ANIMAL_IMAGES:
+                    source_icon = ANIMAL_IMAGES[animal['name']]['source']
+                    scaled_icon = pygame.transform.scale(source_icon, (icon_size, icon_size))
+                    screen.blit(scaled_icon, icon_rect.topleft)
             
             if i == confirmed_animal_idx:
                 pygame.draw.rect(screen, border_color, icon_rect, 2)
             
-            if not (is_human_player and is_ready):
-                if focus_level == 1 and i == cursor_pos:
-                    pygame.draw.rect(screen, settings.WHITE, icon_rect, 2)
+            if is_hovered:
+                pygame.draw.rect(screen, settings.WHITE, icon_rect, 2)
 
     if is_human_player and is_ready:
         overlay = pygame.Surface(base_rect.size, pygame.SRCALPHA)
@@ -272,7 +327,7 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
         x_pos = pred_x if role == 'predator' else prey_x
         panel_rect = pygame.Rect(x_pos, y_pos, panel_width, panel_height)
         panel_rects_to_return[player_id] = panel_rect
-        draw_player_panel(screen, player_id, panel_rect, game_settings, p_ready.get(player_id, False), player_focus.get(player_id), player_cursors.get(player_id))
+        draw_player_panel(screen, player_id, panel_rect, game_settings, p_ready.get(player_id, False), player_focus.get(player_id), player_cursors.get(player_id), num_gamepads)
 
     if role_error_message:
         font_error = pygame.font.Font(None, 40)
@@ -444,3 +499,4 @@ def draw_killcam_hud(screen, top_text, bottom_text, bottom_text_color):
     bg_surf.fill((0, 0, 0, 150))
     screen.blit(bg_surf, bg_rect)
     screen.blit(bottom_surf, bottom_rect)
+

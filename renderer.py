@@ -84,8 +84,30 @@ class MapRenderer:
         
         map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         
-        for y in range(settings.MAP_POINTS - 1):
+        # Draw horizontal lines
+        for y in range(settings.MAP_POINTS):
             for x in range(settings.MAP_POINTS - 1):
+                p1_x = (x / (settings.MAP_POINTS - 1) - 0.5) * map_width
+                p1_y = (y / (settings.MAP_POINTS - 1) - 0.5) * map_width
+                p1_z = self.map_data[y, x] * settings.Z_BOOST_FACTOR
+                
+                p2_x = ((x + 1) / (settings.MAP_POINTS - 1) - 0.5) * map_width
+                p2_y = (y / (settings.MAP_POINTS - 1) - 0.5) * map_width
+                p2_z = self.map_data[y, x+1] * settings.Z_BOOST_FACTOR
+
+                p1_screen = self._project_isometric(p1_x, p1_y, p1_z, rotation_angle)
+                p2_screen = self._project_isometric(p2_x, p2_y, p2_z, rotation_angle)
+                
+                avg_z = (p1_z + p2_z) / 2
+                color_intensity = int(avg_z / (settings.Z_BOOST_FACTOR) * 255)
+                color_intensity = max(50, min(255, color_intensity))
+                color = (color_intensity, color_intensity, color_intensity)
+                
+                pygame.draw.line(self.map_cache, color, p1_screen, p2_screen)
+
+        # Draw vertical lines
+        for x in range(settings.MAP_POINTS):
+            for y in range(settings.MAP_POINTS - 1):
                 p1_x = (x / (settings.MAP_POINTS - 1) - 0.5) * map_width
                 p1_y = (y / (settings.MAP_POINTS - 1) - 0.5) * map_width
                 p1_z = self.map_data[y, x] * settings.Z_BOOST_FACTOR
@@ -94,21 +116,16 @@ class MapRenderer:
                 p2_y = ((y + 1) / (settings.MAP_POINTS - 1) - 0.5) * map_width
                 p2_z = self.map_data[y+1, x] * settings.Z_BOOST_FACTOR
                 
-                p3_x = ((x + 1) / (settings.MAP_POINTS - 1) - 0.5) * map_width
-                p3_y = (y / (settings.MAP_POINTS - 1) - 0.5) * map_width
-                p3_z = self.map_data[y, x+1] * settings.Z_BOOST_FACTOR
-                
                 p1_screen = self._project_isometric(p1_x, p1_y, p1_z, rotation_angle)
                 p2_screen = self._project_isometric(p2_x, p2_y, p2_z, rotation_angle)
-                p3_screen = self._project_isometric(p3_x, p3_y, p3_z, rotation_angle)
 
-                avg_z = (p1_z + p2_z + p3_z) / 3
+                avg_z = (p1_z + p2_z) / 2
                 color_intensity = int(avg_z / (settings.Z_BOOST_FACTOR) * 255)
                 color_intensity = max(50, min(255, color_intensity))
                 color = (color_intensity, color_intensity, color_intensity)
                 
                 pygame.draw.line(self.map_cache, color, p1_screen, p2_screen)
-                pygame.draw.line(self.map_cache, color, p1_screen, p3_screen)
+
 
         self.screen.blit(self.map_cache, self.rect.topleft)
         self.last_rendered_angle = rotation_angle

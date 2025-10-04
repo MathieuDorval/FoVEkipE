@@ -8,7 +8,7 @@
 #   \ \___  \  \ \  __\   \/_/\ \/ \/_/\ \/ \ \ \  \ \ \-.  \  \ \ \__ \  \ \___  \  
 #    \/\_____\  \ \_____\    \ \_\    \ \_\  \ \_\  \ \_\\"\_\  \ \_____\  \/\_____\ 
 #     \/_____/   \/_____/     \/_/     \/_/   \/_/   \/_/ \/_/   \/_____/   \/_____/
-#   (version 03/10)
+#   (version 04/10)
 #   → All game constants and default values
 
 import math
@@ -20,6 +20,7 @@ LANGUAGE                = "en" # "fr" or "en"
 SCREEN_WIDTH            = 1400
 SCREEN_HEIGHT           = 900
 FULLSCREEN              = True  # Display the game full-screen without borders
+DISPLAY_SCREEN          = 0     # 0 for primary screen, 1 for secondary, etc.
 FPS                     = 60    # Update per second
 
 # --- COLOR ---
