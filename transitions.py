@@ -8,7 +8,7 @@
 #   \/_/\ \/ \ \  __<   \ \  __ \  \ \ \-.  \  \ \___  \  \ \ \  \/_/\ \/ \ \ \  \ \ \/\ \  \ \ \-.  \  \ \___  \  
 #      \ \_\  \ \_\ \_\  \ \_\ \_\  \ \_\\"\_\  \/\_____\  \ \_\    \ \_\  \ \_\  \ \_____\  \ \_\\"\_\  \/\_____\ 
 #       \/_/   \/_/ /_/   \/_/\/_/   \/_/ \/_/   \/_____/   \/_/     \/_/   \/_/   \/_____/   \/_/ \/_/   \/_____/
-#   (version 03/10)
+#   (version 04/10)
 #   → Manages round transitions
 
 import pygame
@@ -136,4 +136,3 @@ def play_round_reset_transition(screen, clock, players, map_renderer, map_rotati
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-

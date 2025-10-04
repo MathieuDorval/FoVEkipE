@@ -8,7 +8,7 @@
 #   \ \  _"-.  \ \ \  \ \ \____  \ \ \____  \ \ \____  \ \  __ \  \ \ \-./\ \  
 #    \ \_\ \_\  \ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \ \_\ 
 #     \/_/\/_/   \/_/   \/_____/   \/_____/   \/_____/   \/_/\/_/   \/_/  \/_/
-#   (version 03/10)
+#   (version 04/10)
 #   → Manages the display of the killcam at the end of the round
 
 import pygame
@@ -257,4 +257,3 @@ def play_killcam(screen, clock, map_renderer, game_data, map_rotation_angle, rou
                 final_positions[player_id] = {'x': pos_x, 'y': pos_y}
 
     return final_positions
-

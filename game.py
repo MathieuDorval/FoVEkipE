@@ -108,9 +108,9 @@ def main():
         game_data = logs.add_game_to_log(session_log, game_settings, players)
         map_renderer = MapRenderer(screen, screen.get_rect(), surface_data, game_settings)
 
-        continue_game = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle, panel_rects)
+        game_result = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle, panel_rects)
 
-        if not continue_game:
+        if game_result == 'QUIT':
             running = False
 
     if session_log['games']:

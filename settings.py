@@ -34,7 +34,11 @@ GRADIENT_COLOR_BOTTOM   = (68, 1, 93)
 GRADIENT_DARK_COLOR_TOP = (2, 0, 16)
 GRADIENT_DARK_COLOR_MIDDLE= (15, 0, 30)
 GRADIENT_DARK_COLOR_BOTTOM= (34, 0, 46)
-SURFACE_COLOR           = (120, 100, 150)
+# Time bar gradient
+TIME_BAR_COLOR_START    = (46, 204, 113)
+TIME_BAR_COLOR_MIDDLE   = (241, 196, 15)
+TIME_BAR_COLOR_END      = (231, 76, 60)
+# Player colors
 PLAYER_COLORS = {
     1: {'predator': (231, 76, 60),  'prey': (155, 89, 182)},
     2: {'predator': (241, 196, 15), 'prey': (52, 152, 219)},

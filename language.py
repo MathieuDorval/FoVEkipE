@@ -47,6 +47,10 @@ TEXTS = {
     'on_label': {'fr': 'Activé', 'en': 'On'},
     'off_label': {'fr': 'Désactivé', 'en': 'Off'},
     'settings_close_prompt': {'fr': 'Appuyez sur Select pour fermer', 'en': 'Press Select to close'},
+    # Pause menu
+    'pause_title': {'fr': 'Pause', 'en': 'Pause'},
+    'resume_label': {'fr': 'Reprendre', 'en': 'Resume'},
+    'return_to_menu_label': {'fr': 'Retour au menu', 'en': 'Back to Menu'},
     # Game over
     'equality_label': {'fr': 'Égalité', 'en': 'Equality'},
     'predators_win_label': {'fr': 'Les prédateurs gagnent !', 'en': 'Predators win!'},

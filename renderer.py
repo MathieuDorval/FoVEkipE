@@ -8,7 +8,7 @@
 #   \ \  __<   \ \  __\   \ \ \-.  \  \ \ \/\ \ \ \  __\   \ \  __<   \ \  __\   \ \  __<   
 #    \ \_\ \_\  \ \_____\  \ \_\\"\_\  \ \____-  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\ \_\ 
 #     \/_/ /_/   \/_____/   \/_/ \/_/   \/____/   \/_____/   \/_/ /_/   \/_____/   \/_/ /_/
-#   (version 14/09)
+#   (version 04/10)
 #   → Manage the graphical rendering
 
 import pygame
@@ -33,13 +33,11 @@ def draw_background(screen, dark=False):
     
     for y in range(height):
         if y < half_height:
-            # Interpolate between top and middle
             ratio = y / half_height if half_height > 0 else 0
             r = top_color[0] + (middle_color[0] - top_color[0]) * ratio
             g = top_color[1] + (middle_color[1] - top_color[1]) * ratio
             b = top_color[2] + (middle_color[2] - top_color[2]) * ratio
         else:
-            # Interpolate between middle and bottom
             ratio = (y - half_height) / (height - half_height) if (height - half_height) > 0 else 0
             r = middle_color[0] + (bottom_color[0] - middle_color[0]) * ratio
             g = middle_color[1] + (bottom_color[1] - middle_color[1]) * ratio
@@ -111,14 +109,11 @@ class MapRenderer:
             self.screen.blit(self.map_cache, self.rect.topleft)
             return
 
-        # Use SRCALPHA for transparency
         self.map_cache = pygame.Surface(self.rect.size, pygame.SRCALPHA)
-        # Fill with a fully transparent color
         self.map_cache.fill((0, 0, 0, 0))
         
         map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         
-        # Draw horizontal lines
         for y in range(settings.MAP_POINTS):
             for x in range(settings.MAP_POINTS - 1):
                 p1_x = (x / (settings.MAP_POINTS - 1) - 0.5) * map_width
@@ -139,7 +134,6 @@ class MapRenderer:
                 
                 pygame.draw.line(self.map_cache, color, p1_screen, p2_screen)
 
-        # Draw vertical lines
         for x in range(settings.MAP_POINTS):
             for y in range(settings.MAP_POINTS - 1):
                 p1_x = (x / (settings.MAP_POINTS - 1) - 0.5) * map_width
@@ -193,4 +187,3 @@ class MapRenderer:
         temp_surface = pygame.Surface((10, 10), pygame.SRCALPHA)
         pygame.draw.circle(temp_surface, (*color, alpha), (5, 5), 3)
         self.screen.blit(temp_surface, (screen_pos[0] - 5, screen_pos[1] - 5))
-

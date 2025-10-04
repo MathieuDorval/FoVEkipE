@@ -14,8 +14,8 @@
 import pygame
 import settings
 import random
-from commands import get_player_action
-from ui import draw_game_info, draw_game_over_screen
+from commands import get_player_action, get_pause_action, get_menu_nav_action, get_confirm_action
+from ui import draw_game_info, draw_game_over_screen, draw_pause_menu
 from killcam import play_killcam
 from ai import get_ai_inputs
 from transitions import play_start_transition, play_round_reset_transition
@@ -141,9 +141,49 @@ def check_collision(player1, player2, game_settings):
     collision_threshold = game_settings.get('map_width', settings.MAP_WIDTH_METERS) * settings.COLLISION_DISTANCE
     return distance < collision_threshold
 
+def pause_menu(screen, clock, gamepads):
+    """
+    Handles the pause menu loop.
+    Returns the selected action: 'RESUME', 'MENU', or 'QUIT'.
+    """
+    selected_index = 0
+    options = ['RESUME', 'MENU', 'QUIT']
+    
+    last_nav_y = 0
+    last_confirm_button = True
+    last_pause_button = True
+
+    paused = True
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 'QUIT'
+
+        nav_y = get_menu_nav_action(gamepads)
+        if nav_y != 0 and last_nav_y == 0:
+            selected_index = (selected_index + nav_y + len(options)) % len(options)
+        
+        confirm_pressed = get_confirm_action(gamepads)
+        if confirm_pressed and not last_confirm_button:
+            return options[selected_index]
+        
+        pause_pressed = get_pause_action(gamepads)
+        if pause_pressed and not last_pause_button:
+            return 'RESUME'
+        
+        last_nav_y = nav_y
+        last_confirm_button = confirm_pressed
+        last_pause_button = pause_pressed
+
+        draw_pause_menu(screen, selected_index)
+        pygame.display.flip()
+        clock.tick(settings.FPS)
+
+
 def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, initial_map_rotation, panel_rects):
     """
     Manage the entire game.
+    Returns 'MENU' to go back to the menu, or 'QUIT' to exit the game.
     """
     map_rotation_angle = initial_map_rotation
     surface_data = game_settings['surface_data']
@@ -153,6 +193,7 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     reset_players_positions(players, game_settings)
     play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, panel_rects)
 
+    last_pause_press = True
     game_over = False
     while not game_over:
         
@@ -164,10 +205,22 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
         while round_running:
             dt = clock.tick(settings.FPS) / 1000.0
             if dt == 0: continue
+            
+            pause_pressed = get_pause_action(gamepads)
+            if pause_pressed and not last_pause_press:
+                action = pause_menu(screen, clock, gamepads)
+                if action == 'MENU':
+                    return 'MENU'
+                elif action == 'QUIT':
+                    return 'QUIT'
+                last_pause_press = True
+            else:
+                last_pause_press = pause_pressed
+
             round_time += dt
 
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: return False
+                if event.type == pygame.QUIT: return 'QUIT'
 
             active_players_list = [p for p in players if p.is_active]
             for player in active_players_list:
@@ -206,7 +259,7 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
             active_players_list = [p for p in players if p.is_active]
             for player in active_players_list:
                 map_renderer.draw_point(player.x, player.y, player.color, map_rotation_angle)
-            draw_game_info(screen, scores, round_time, players, game_settings['round_duration'])
+            draw_game_info(screen, scores, round_time, players, game_settings)
             pygame.display.flip()
 
         active_at_end = [p for p in players if p.is_active]
@@ -239,5 +292,4 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     logs.finalize_game_data(game_data, scores, players, game_settings.get('winning_score', 3))
     draw_game_over_screen(screen, clock, gamepads, players, scores, game_settings)
     
-    return True
-
+    return 'MENU'

@@ -8,7 +8,7 @@
 #   \ \ \____  \ \ \/\ \  \ \ \-./\ \  \ \ \-./\ \  \ \  __ \  \ \ \-.  \  \ \ \/\ \ \ \___  \  
 #    \ \_____\  \ \_____\  \ \_\ \ \_\  \ \_\ \ \_\  \ \_\ \_\  \ \_\\"\_\  \ \____-  \/\_____\ 
 #     \/_____/   \/_____/   \/_/  \/_/   \/_/  \/_/   \/_/\/_/   \/_/ \/_/   \/____/   \/_____/
-#   (version 03/10)
+#   (version 04/10)
 #   → Manages keyboard and controller inputs
 
 import pygame
@@ -219,3 +219,40 @@ def get_confirm_action(gamepads):
         if keys[pygame.K_SPACE] or keys[pygame.K_RETURN]:
             return True
     return False
+
+def get_pause_action(gamepads):
+    """
+    Check if the pause button is pressed (Select on gamepad 1, or ESC on keyboard).
+    """
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_ESCAPE]:
+        return True
+        
+    if gamepads:
+        pad1 = gamepads[0]
+        if pad1.get_numbuttons() > 6 and pad1.get_button(6):
+            return True
+            
+    return False
+
+def get_menu_nav_action(gamepads):
+    """
+    Check for up/down navigation actions for menus like the pause menu.
+    """
+    keys = pygame.key.get_pressed()
+    
+    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        return 1
+    if keys[pygame.K_UP] or keys[pygame.K_z]:
+        return -1
+        
+    if gamepads:
+        pad1 = gamepads[0]
+        if pad1.get_numaxes() > 1:
+            y_axis = pad1.get_axis(1)
+            if y_axis > 0.5:
+                return 1
+            if y_axis < -0.5:
+                return -1
+    
+    return 0
