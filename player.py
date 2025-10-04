@@ -8,8 +8,8 @@
 #   \ \  _-/ \ \ \____  \ \  __ \  \ \____ \  \ \  __\   \ \  __<   
 #    \ \_\    \ \_____\  \ \_\ \_\  \/\_____\  \ \_____\  \ \_\ \_\ 
 #     \/_/     \/_____/   \/_/\/_/   \/_____/   \/_____/   \/_/ /_/
-#   (version 14/09)
-#   -> Sets the player's parameters and positions
+#   (version 03/10)
+#   → Sets the player's parameters and positions
 
 import pygame
 import settings
@@ -112,6 +112,7 @@ class Player:
         map_width = game_settings.get('map_width', settings.MAP_WIDTH_METERS)
         half_map_width = map_width / 2
         
+        # Infinite map option: player teleports to the opposite side if they reach a wall (like Snake)
         if game_settings.get('infinity_map', False):
             if self.x > half_map_width: self.x = -half_map_width
             elif self.x < -half_map_width: self.x = half_map_width

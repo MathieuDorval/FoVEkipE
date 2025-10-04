@@ -9,7 +9,7 @@
 #    \ \_____\  \ \_____\  \ \_____\  \/\_____\ 
 #     \/_____/   \/_____/   \/_____/   \/_____/ 
 #   (version 03/10)
-#   -> Manages game data logging
+#   → Manages game data logging
 
 import os
 import scipy.io

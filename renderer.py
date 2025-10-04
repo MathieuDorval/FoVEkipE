@@ -9,7 +9,7 @@
 #    \ \_\ \_\  \ \_____\  \ \_\\"\_\  \ \____-  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\ \_\ 
 #     \/_/ /_/   \/_____/   \/_/ \/_/   \/____/   \/_____/   \/_/ /_/   \/_____/   \/_/ /_/
 #   (version 14/09)
-#   -> Manage the graphical rendering
+#   → Manage the graphical rendering
 
 import pygame
 import math

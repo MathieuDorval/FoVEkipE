@@ -9,7 +9,7 @@
 #    \ \_\ \ \_\  \ \_____\  \ \_\\"\_\  \ \_____\ 
 #     \/_/  \/_/   \/_____/   \/_/ \/_/   \/_____/ 
 #   (version 03/10)
-#   -> Manage the main menu
+#   → Manage the main menu
 
 import pygame
 import settings

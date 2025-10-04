@@ -9,7 +9,7 @@
 #    \ \_____\  \ \_____\    \ \_\  \/\_____\  \ \_\    \ \_____\  \ \_\ \_\  \/\_____\ 
 #     \/_____/   \/_____/     \/_/   \/_____/   \/_/     \/_____/   \/_/\/_/   \/_____/
 #   (version 03/10)
-#   -> Handles the main game loop
+#   → Handles the main game loop
 
 import pygame
 import settings
@@ -23,7 +23,7 @@ import logs
 
 def get_shortest_distance(p1, p2, map_width):
     """
-    Calculate the shortest distance between two players, accounting for map wrapping.
+    Calculate the shortest distance between two players.
     """
     dx = abs(p1.x - p2.x)
     dy = abs(p1.y - p2.y)
@@ -150,7 +150,7 @@ def game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_se
     scores = {p.id: 0 for p in players}
     
     reset_players_positions(players, game_settings)
-    play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, game_settings, panel_rects)
+    play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, panel_rects)
 
     game_over = False
     while not game_over:

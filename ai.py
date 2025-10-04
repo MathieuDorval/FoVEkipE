@@ -9,7 +9,7 @@
 #    \ \_\ \_\  \ \_\ 
 #     \/_/\/_/   \/_/
 #   (version 14/09)
-#   -> Manages AI
+#   → Manages AI
 
 import pygame
 import settings

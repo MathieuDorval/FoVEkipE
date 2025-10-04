@@ -9,7 +9,7 @@
 #    \/\_____\  \ \_____\    \ \_\    \ \_\  \ \_\  \ \_\\"\_\  \ \_____\  \/\_____\ 
 #     \/_____/   \/_____/     \/_/     \/_/   \/_/   \/_/ \/_/   \/_____/   \/_____/
 #   (version 03/10)
-#   -> All game constants and default values
+#   → All game constants and default values
 
 import math
 
@@ -19,8 +19,8 @@ LANGUAGE                = "en" # "fr" or "en"
 # --- SCREEN ---
 SCREEN_WIDTH            = 1400
 SCREEN_HEIGHT           = 900
-FULLSCREEN              = True
-FPS                     = 60
+FULLSCREEN              = True  # Display the game full-screen without borders
+FPS                     = 60    # Update per second
 
 # --- COLOR ---
 BLACK                   = (0, 0, 0)
@@ -36,37 +36,37 @@ COLOR_PREDATOR          = (220, 40, 40)
 COLOR_PREY              = (47, 173, 72)
 
 # --- MAP ---
-MAP_POINTS              = 100
-MAP_WIDTH_METERS        = 15
-MAP_MAX_HEIGHT_RATIO    = 0.1
+MAP_POINTS              = 100   # Map resolution (in number of points)
+MAP_WIDTH_METERS        = 15    # Map width/height in meters
+MAP_MAX_HEIGHT_RATIO    = 0.1   # Maximum map height (as a percentage)
 AVAILABLE_MAPS          = ["Default", "Flat", "Hills", "Plain", "Mountain", "MatLab"]
 SELECTED_MAP            = "Default"
-ROTATION_SPEED          = 0.05
-ISO_ANGLE               = math.radians(30)
-Z_BOOST_FACTOR          = 6.0
-PLAYER_Z_OFFSET         = 0.05
-MAX_SLOPE               = 30
-POINT_SCALE             = 8
+ROTATION_SPEED          = 0.05  # Map rotation speed
+ISO_ANGLE               = math.radians(30)  # Map viewing angle
+Z_BOOST_FACTOR          = 6.0   # Visual amplification of map height
+PLAYER_Z_OFFSET         = 0.05  # Visual increase of player position ()
+MAX_SLOPE               = 30    # Maximum map slope, as a percentage
+POINT_SCALE             = 8     # Player size
 
 # --- JOSYTICKS ---
-JOYSTICK_DEADZONE = 0.15
+JOYSTICK_DEADZONE       = 0.15
 
 # --- PHYSICS ---
-GRAVITY = 9.81
+GRAVITY                 = 9.81
 SLOPE_CORRECTION        = True
 BRAKE_CORRECTION        = True
 VC_SPEED                = False
 WAC_RATIO               = 1.0
 
 # --- GAME RULES ---
-ROUND_DURATION          = 30
+ROUND_DURATION          = 30    # In seconds
 WINNING_SCORE           = 3
-TIME_KILLCAM            = 3.0
+TIME_KILLCAM            = 3.0   # In seconds
 KILLCAM_N_PARTICLES     = 50
 PREDATOR_PLAYER         = 1
-MIN_DISTANCE_PREDATOR   = 0.4
-COLLISION_DISTANCE      = 0.04
-N_ANIMALS_TO_SELECT     = 9
+MIN_DISTANCE_PREDATOR   = 0.4   # Distance between prey and predator at launch (as a percentage)
+COLLISION_DISTANCE      = 0.04  # Distance between prey and predator to catch (as a percentage)
+N_ANIMALS_TO_SELECT     = 9     # Number of animals to display
 PLAYER1_ANIMAL          = "Wolf"
 PLAYER2_ANIMAL          = "Deer"
 PLAYER3_ANIMAL          = "Deer"
@@ -74,4 +74,4 @@ PLAYER4_ANIMAL          = "Deer"
 AI_ENABLED              = False
 INFINITY_MAP            = False
 VIBRATION_MODE          = False
-VIBRATION_DISTANCE_RATIO= 0.5
+VIBRATION_DISTANCE_RATIO= 0.5   # Distance from which vibrations start (as a percentage)

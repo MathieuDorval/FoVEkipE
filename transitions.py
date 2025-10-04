@@ -9,17 +9,15 @@
 #      \ \_\  \ \_\ \_\  \ \_\ \_\  \ \_\\"\_\  \/\_____\  \ \_\    \ \_\  \ \_\  \ \_____\  \ \_\\"\_\  \/\_____\ 
 #       \/_/   \/_/ /_/   \/_/\/_/   \/_/ \/_/   \/_____/   \/_/     \/_/   \/_/   \/_____/   \/_/ \/_/   \/_____/
 #   (version 03/10)
-#   -> Manages round transitions
+#   → Manages round transitions
 
 import pygame
 import settings
-from ui import ANIMAL_IMAGES, load_animal_images
 
-def play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, game_settings, panel_rects):
+def play_start_transition(screen, clock, players, map_renderer, map_rotation_angle, panel_rects):
     """
     Play the start-up animation.
     """
-    load_animal_images()
     duration = 3.0
     phase1_duration = duration * 0.5
     phase2_duration = duration * 0.5

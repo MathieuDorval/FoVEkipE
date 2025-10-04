@@ -8,8 +8,8 @@
 #   \ \  _-/ \ \  __ \  \ \____ \  \ \___  \  \ \ \  \ \ \____  \ \___  \  
 #    \ \_\    \ \_\ \_\  \/\_____\  \/\_____\  \ \_\  \ \_____\  \/\_____\ 
 #     \/_/     \/_/\/_/   \/_____/   \/_____/   \/_/   \/_____/   \/_____/ 
-#   (version 14/09)
-#   -> Manages game physics, based on the FoVE model
+#   (version 03/10)
+#   → Manages game physics, based on the FoVE model
 
 import pygame
 import settings
@@ -29,16 +29,16 @@ def calculate_physics_update(player, direction_vector, intensity, dt, slope_angl
     k           = stats.get('k', 0)
     Ff          = stats.get('Ff', 0)
     g           = settings.GRAVITY
-    slopeOpt    = stats.get('slopeOpt', 0) if game_settings.get('slope_correction', True) else 100
+    slopeOpt    = stats.get('slopeOpt', 0) if game_settings.get('slope_correction', True) else 100  # → Parameters required for slope correction
     F0i         = stats.get('F0i', 0)
     V0i         = stats.get('V0i', 1) 
     F0c         = stats.get('F0c', 0)
     V0c         = stats.get('V0c', 1) 
     WacMax      = stats.get('WacMax', 1)
-    Fbrake      = stats.get('Fbrake', 0) if game_settings.get('brake_correction', True) else 0
-    wac_ratio_setting = game_settings.get('wac_ratio', 1.0)
+    Fbrake      = stats.get('Fbrake', 0) if game_settings.get('brake_correction', True) else 0  # → Parameters required for braking correction
+    wac_ratio_setting = game_settings.get('wac_ratio', 1.0) # → Parameter for the Wac consumption ratio (to consume it faster/slower)
     
-    use_vc_speed = game_settings.get('vc_speed', False) and intensity == 0 and direction_vector.length_squared() > 0
+    use_vc_speed = game_settings.get('vc_speed', False) and intensity == 0 and direction_vector.length_squared() > 0    # → Options required for critical speed correction
 
     Fi = F0i * (1 - current_speed / V0i) if V0i > 0 else 0
     Fc = F0c * (1 - current_speed / V0c) if V0c > 0 else 0
@@ -46,6 +46,8 @@ def calculate_physics_update(player, direction_vector, intensity, dt, slope_angl
     wac_ratio = (current_wac / WacMax) if WacMax > 0 else 0
     Fmax = Fi - (Fi - Fc) * wac_ratio
     
+    # VC speed correction :
+    # If no intensity is related to the trigger but a direction is present, a critical force is applied (no reduction in Wac)
     Fr = 0
     if use_vc_speed:
         Fr = Fc

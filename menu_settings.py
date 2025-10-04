@@ -9,14 +9,15 @@
 #    \ \_\ \ \_\  \ \_____\  \ \_\\"\_\  \ \_____\     \/\_____\  \ \_____\    \ \_\    \ \_\  \ \_\  \ \_\\"\_\  \ \_____\  \/\_____\ 
 #     \/_/  \/_/   \/_____/   \/_/ \/_/   \/_____/      \/_____/   \/_____/     \/_/     \/_/   \/_/   \/_/ \/_/   \/_____/   \/_____/
 #   (version 03/10)
-#   -> Manage the settings menu
+#   → Manage the settings menu
 
 import pygame
 import settings
 from commands import get_menu_inputs
 from ui import draw_settings_menu
-from language import get_text, set_language
+from language import set_language
 
+# Currently many options, needs cleaning for the final game
 def menu_settings_loop(screen, clock, gamepads, game_settings):
     """
     Handle the settings menu.

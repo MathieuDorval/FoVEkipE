@@ -9,7 +9,7 @@
 #    \ \_____\  \ \_____\  \ \_\ \ \_\  \ \_\ \ \_\  \ \_\ \_\  \ \_\\"\_\  \ \____-  \/\_____\ 
 #     \/_____/   \/_____/   \/_/  \/_/   \/_/  \/_/   \/_/\/_/   \/_/ \/_/   \/____/   \/_____/
 #   (version 03/10)
-#   -> Manages keyboard and controller inputs
+#   → Manages keyboard and controller inputs
 
 import pygame
 import settings
@@ -59,6 +59,7 @@ def get_menu_inputs(gamepads):
     keys = pygame.key.get_pressed()
     num_gamepads = len(gamepads)
 
+    # Menu commands
     if num_gamepads > 0 and gamepads[0].get_numhats() > 0:
         hat_x, hat_y = gamepads[0].get_hat(0)
         actions['map_rotate_x'] = hat_x
@@ -71,7 +72,7 @@ def get_menu_inputs(gamepads):
         actions['open_settings'] = get_button(gamepads[0], 6)
     else:
         actions['open_settings'] = keys[pygame.K_BACKSPACE]
-
+    # P1 & P2 keyboard controls
     if num_gamepads == 0:
         actions['p1_nav_x'] = keys[pygame.K_d] - keys[pygame.K_q]
         actions['p1_nav_y'] = keys[pygame.K_s] - keys[pygame.K_z]
@@ -79,14 +80,14 @@ def get_menu_inputs(gamepads):
         actions['p2_nav_x'] = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
         actions['p2_nav_y'] = keys[pygame.K_DOWN] - keys[pygame.K_UP]
         actions['p2_confirm'] = keys[pygame.K_RETURN]
-
+    # P1 & P2 1 gamepad controls
     elif num_gamepads == 1:
         g1 = gamepads[0]
         actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)
         actions['p2_nav_x'] = get_axis(g1, 2); actions['p2_nav_y'] = get_axis(g1, 3); actions['p2_confirm'] = get_trigger_confirm(g1, 5)
         actions['p1_toggle_active'] = get_button(g1, 8)
         actions['p2_toggle_active'] = get_button(g1, 9)
-
+    # P1 & P2 & P3 & P4 2 gamepads controls
     elif num_gamepads == 2:
         g1, g2 = gamepads[0], gamepads[1]
         actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)
@@ -98,7 +99,7 @@ def get_menu_inputs(gamepads):
         actions['p2_toggle_active'] = get_button(g2, 8)
         actions['p3_toggle_active'] = get_button(g1, 9)
         actions['p4_toggle_active'] = get_button(g2, 9)
-
+    # P1 & P2 & P3 & P4 3 gamepads controls
     elif num_gamepads == 3:
         g1, g2, g3 = gamepads[0], gamepads[1], gamepads[2]
         actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)
@@ -110,7 +111,7 @@ def get_menu_inputs(gamepads):
         actions['p2_toggle_active'] = get_button(g2, 8)
         actions['p3_toggle_active'] = get_button(g3, 8)
         actions['p4_toggle_active'] = get_button(g1, 9)
-
+    # P1 & P2 & P3 & P4 4 gamepads controls
     elif num_gamepads >= 4:
         g1, g2, g3, g4 = gamepads[0], gamepads[1], gamepads[2], gamepads[3]
         actions['p1_nav_x'] = get_axis(g1, 0); actions['p1_nav_y'] = get_axis(g1, 1); actions['p1_confirm'] = get_trigger_confirm(g1, 4)

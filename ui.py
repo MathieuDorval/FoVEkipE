@@ -9,7 +9,7 @@
 #    \ \_____\  \ \_\ 
 #     \/_____/   \/_/
 #   (version 03/10)
-#   -> Manages the on-screen display
+#   → Manages the on-screen display
 
 import pygame
 import settings

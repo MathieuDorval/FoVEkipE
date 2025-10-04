@@ -9,7 +9,7 @@
 #    \ \_\ \ \_\  \ \_\ \_\  \ \_\    \/\_____\ 
 #     \/_/  \/_/   \/_/\/_/   \/_/     \/_____/
 #   (version 14/09)
-#   -> Manages map generation and selection
+#   → Manages map generation and selection
 
 import numpy as np
 import settings
@@ -119,7 +119,7 @@ def generate_terrain(map_name, width, height, game_settings):
     Generate the requested map based on the name.
     """
     normalized_terrain = np.zeros((width, height))
-    
+    # Allows adding maps with Perlin noise
     if map_name     == "Flat": normalized_terrain       = generate_flat_terrain(width, height)
     elif map_name   == "MatLab": normalized_terrain     = generate_matlab_terrain(width, height)
     elif map_name   == "Mountain": normalized_terrain   = generate_mountain_terrain(width, height)

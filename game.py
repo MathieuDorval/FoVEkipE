@@ -8,8 +8,8 @@
 #   \ \ \__ \  \ \  __ \  \ \ \-./\ \  \ \  __\   
 #    \ \_____\  \ \_\ \_\  \ \_\ \ \_\  \ \_____\ 
 #     \/_____/   \/_/\/_/   \/_/  \/_/   \/_____/
-#   (version 03/10)
-#   -> Main game file
+#   (version 04/10)
+#   → Main game file
 
 import pygame
 import settings
@@ -30,8 +30,14 @@ def main():
     pygame.init()
     
     if settings.FULLSCREEN:
-        screen_flags = pygame.FULLSCREEN
-        screen = pygame.display.set_mode((0, 0), screen_flags)
+        screen_flags = pygame.NOFRAME
+        desktop_sizes = pygame.display.get_desktop_sizes()
+        if desktop_sizes:
+            screen_size = desktop_sizes[0]  # → Selecting the screen to launch the game on
+            screen = pygame.display.set_mode(screen_size, screen_flags)
+        else:
+            screen_flags = pygame.FULLSCREEN
+            screen = pygame.display.set_mode((0, 0), screen_flags)
     else:
         screen_flags = pygame.RESIZABLE
         screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT), screen_flags, vsync=1)

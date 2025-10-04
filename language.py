@@ -9,11 +9,11 @@
 #    \ \_____\  \ \_\ \_\  \ \_\\"\_\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_____\ 
 #     \/_____/   \/_/\/_/   \/_/ \/_/   \/_____/   \/_____/   \/_/\/_/   \/_____/   \/_____/
 #   (version 03/10)
-#   -> Manages game languages
+#   → Manages game languages
 
 TEXTS = {
     'game_name': {'fr': 'FoVE qui Peut', 'en': 'Run FoVE your Life'},
-
+    # Menu
     'player_label': {'fr': 'Joueur', 'en': 'Player'},
     'predators_label': {'fr': 'Prédateurs', 'en': 'Predators'},
     'preys_label': {'fr': 'Proies', 'en': 'Preys'},
@@ -30,7 +30,7 @@ TEXTS = {
     'p3_join_prompt_3plus_pads': {'fr': 'Joueur 3 : pressez le joystick gauche (manette 3)', 'en': 'Player 3: press left joystick (controller 3)'},
     'p4_join_prompt_3pads': {'fr': 'Joueur 4 : pressez le joystick droit (manette 1)', 'en': 'Player 4: press right joystick (controller 1)'},
     'p4_join_prompt_4pads': {'fr': 'Joueur 4 : pressez le joystick gauche (manette 4)', 'en': 'Player 4: press left joystick (controller 4)'},
-
+    # Settings menu
     'settings_title': {'fr': 'Paramètres du jeu', 'en': 'Game Settings'},
     'language_label': {'fr': 'Langue', 'en': 'Language'},
     'round_duration_label': {'fr': 'Durée de la manche', 'en': 'Round Duration'},
@@ -47,7 +47,7 @@ TEXTS = {
     'on_label': {'fr': 'Activé', 'en': 'On'},
     'off_label': {'fr': 'Désactivé', 'en': 'Off'},
     'settings_close_prompt': {'fr': 'Appuyez sur Select pour fermer', 'en': 'Press Select to close'},
-
+    # Game over
     'equality_label': {'fr': 'Égalité', 'en': 'Equality'},
     'predators_win_label': {'fr': 'Les prédateurs gagnent !', 'en': 'Predators win!'},
     'predator_wins_label': {'fr': 'Le prédateur gagne !', 'en': 'Predator wins!'},
@@ -55,11 +55,11 @@ TEXTS = {
     'prey_wins_label': {'fr': 'La proie gagne !', 'en': 'Prey wins!'},
     'return_to_menu_prompt_keyboard': {'fr': 'Appuyez sur ESPACE pour revenir au menu', 'en': 'Press SPACE to return to the menu'},
     'return_to_menu_prompt_gamepad': {'fr': 'Appuyez sur RT ou LT pour revenir au menu', 'en': 'Press RT or LT to return to the menu'},
-
+    # Killcam
     'killcam_label': {'fr': 'Killcam', 'en': 'Killcam'},
     'catch_label': {'fr': 'Attrapé !', 'en': 'Catch!'},
     'escape_label': {'fr': 'Échappé !', 'en': 'Escape!'},
-
+    # Animals
     'Wolf': {'fr': 'Loup', 'en': 'Wolf'},
     'Deer': {'fr': 'Cerf', 'en': 'Deer'},
     'Giga Wolf': {'fr': 'Giga Loup', 'en': 'Giga Wolf'},

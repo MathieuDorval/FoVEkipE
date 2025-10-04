@@ -9,7 +9,7 @@
 #    \ \_\ \_\  \ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\ \ \_\ 
 #     \/_/\/_/   \/_/   \/_____/   \/_____/   \/_____/   \/_/\/_/   \/_/  \/_/
 #   (version 03/10)
-#   -> Manages the display of the killcam at the end of the round
+#   → Manages the display of the killcam at the end of the round
 
 import pygame
 import settings
