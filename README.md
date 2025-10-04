@@ -1,5 +1,10 @@
 # Run FoVE your Life - Controls Guide / Guide des Commandes
 
+## **How to Launch the Game**
+To start the game, run the `game.py` file using Python from your terminal:
+```bash
+python game.py
+```
 ---
 
 ## **English Guide**
