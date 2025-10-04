@@ -1,8 +1,8 @@
-#    ______   ______     __   __   ______     __  __     __     ______   ______    
-#   /\  ___\ /\  __ \   /\ \ / /  /\  ___\   /\ \/ /    /\ \   /\  == \ /\  ___\   
-#   \ \  __\ \ \ \/\ \  \ \ \'/   \ \  __\   \ \  _"-.  \ \ \  \ \  _-/ \ \  __\   
-#    \ \_\    \ \_____\  \ \__|    \ \_____\  \ \_\ \_\  \ \_\  \ \_\    \ \_____\ 
-#     \/_/     \/_____/   \/_/      \/_____/   \/_/\/_/   \/_/   \/_/     \/_____/ 
+#    ______     __  __     __   __     ______   ______     __   __   ______     __  __     ______     __  __     ______     __         __     ______   ______    
+#   /\  == \   /\ \/\ \   /\ "-.\ \   /\  ___\ /\  __ \   /\ \ / /  /\  ___\   /\ \_\ \   /\  __ \   /\ \/\ \   /\  == \   /\ \       /\ \   /\  ___\ /\  ___\   
+#   \ \  __<   \ \ \_\ \  \ \ \-.  \  \ \  __\ \ \ \/\ \  \ \ \'/   \ \  __\   \ \____ \  \ \ \/\ \  \ \ \_\ \  \ \  __<   \ \ \____  \ \ \  \ \  __\ \ \  __\   
+#    \ \_\ \_\  \ \_____\  \ \_\\"\_\  \ \_\    \ \_____\  \ \__|    \ \_____\  \/\_____\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\  \ \_\    \ \_____\ 
+#     \/_/ /_/   \/_____/   \/_/ \/_/   \/_/     \/_____/   \/_/      \/_____/   \/_____/   \/_____/   \/_____/   \/_/ /_/   \/_____/   \/_/   \/_/     \/_____/
 #    __  __     __    
 #   /\ \/\ \   /\ \   
 #   \ \ \_\ \  \ \ \  
@@ -245,7 +245,7 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
     font_large = pygame.font.Font(None, 74)
     font_role_title = pygame.font.Font(None, 48)
 
-    title_text = font_large.render("FoVEkipE", True, settings.WHITE)
+    title_text = font_large.render(get_text('game_name'), True, settings.WHITE)
     title_rect = title_text.get_rect(midtop=(screen.get_width() // 2, 10))
     screen.blit(title_text, title_rect)
 
@@ -281,6 +281,50 @@ def draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role
         bg_surf = pygame.Surface(bg_rect.size, pygame.SRCALPHA); bg_surf.fill((0, 0, 0, 180))
         screen.blit(bg_surf, bg_rect)
         screen.blit(error_text, error_text.get_rect(center=bg_rect.center))
+
+    prompts = []
+    font_prompt = pygame.font.Font(None, 28)
+    prompt_color = (200, 200, 200)
+
+    if num_gamepads == 1:
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_1pad'))
+    elif num_gamepads == 2:
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_2pads'))
+        if game_settings.get('p3_status') == 'INACTIVE':
+            prompts.append(get_text('p3_join_prompt_2pads'))
+        if game_settings.get('p4_status') == 'INACTIVE':
+            prompts.append(get_text('p4_join_prompt_2pads'))
+    elif num_gamepads == 3:
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_2pads'))
+        if game_settings.get('p3_status') == 'INACTIVE':
+            prompts.append(get_text('p3_join_prompt_3plus_pads'))
+        if game_settings.get('p4_status') == 'INACTIVE':
+            prompts.append(get_text('p4_join_prompt_3pads'))
+    elif num_gamepads >= 4:
+        if game_settings.get('p1_status') == 'INACTIVE':
+            prompts.append(get_text('p1_join_prompt'))
+        if game_settings.get('p2_status') == 'INACTIVE':
+            prompts.append(get_text('p2_join_prompt_2pads'))
+        if game_settings.get('p3_status') == 'INACTIVE':
+            prompts.append(get_text('p3_join_prompt_3plus_pads'))
+        if game_settings.get('p4_status') == 'INACTIVE':
+            prompts.append(get_text('p4_join_prompt_4pads'))
+    
+    if prompts:
+        base_y = screen.get_height() - 30 - (len(prompts) - 1) * 30
+        for i, text in enumerate(prompts):
+            prompt_surf = font_prompt.render(text, True, prompt_color)
+            prompt_rect = prompt_surf.get_rect(centerx=screen.get_width() / 2, y=base_y + i * 30)
+            screen.blit(prompt_surf, prompt_rect)
 
     return panel_rects_to_return
 

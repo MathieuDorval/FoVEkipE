@@ -1,8 +1,8 @@
-#    ______   ______     __   __   ______     __  __     __     ______   ______    
-#   /\  ___\ /\  __ \   /\ \ / /  /\  ___\   /\ \/ /    /\ \   /\  == \ /\  ___\   
-#   \ \  __\ \ \ \/\ \  \ \ \'/   \ \  __\   \ \  _"-.  \ \ \  \ \  _-/ \ \  __\   
-#    \ \_\    \ \_____\  \ \__|    \ \_____\  \ \_\ \_\  \ \_\  \ \_\    \ \_____\ 
-#     \/_/     \/_____/   \/_/      \/_____/   \/_/\/_/   \/_/   \/_/     \/_____/ 
+#    ______     __  __     __   __     ______   ______     __   __   ______     __  __     ______     __  __     ______     __         __     ______   ______    
+#   /\  == \   /\ \/\ \   /\ "-.\ \   /\  ___\ /\  __ \   /\ \ / /  /\  ___\   /\ \_\ \   /\  __ \   /\ \/\ \   /\  == \   /\ \       /\ \   /\  ___\ /\  ___\   
+#   \ \  __<   \ \ \_\ \  \ \ \-.  \  \ \  __\ \ \ \/\ \  \ \ \'/   \ \  __\   \ \____ \  \ \ \/\ \  \ \ \_\ \  \ \  __<   \ \ \____  \ \ \  \ \  __\ \ \  __\   
+#    \ \_\ \_\  \ \_____\  \ \_\\"\_\  \ \_\    \ \_____\  \ \__|    \ \_____\  \/\_____\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\  \ \_\    \ \_____\ 
+#     \/_/ /_/   \/_____/   \/_/ \/_/   \/_/     \/_____/   \/_/      \/_____/   \/_____/   \/_____/   \/_____/   \/_/ /_/   \/_____/   \/_/   \/_/     \/_____/
 #    ______     ______     __    __     ______    
 #   /\  ___\   /\  __ \   /\ "-./  \   /\  ___\   
 #   \ \ \__ \  \ \  __ \  \ \ \-./\ \  \ \  __\   
@@ -21,7 +21,6 @@ from maps import generate_terrain
 from letsplay import game_loop
 from menu import menu_loop
 import logs
-from datetime import datetime
 from language import set_language
 
 def main():
@@ -37,7 +36,7 @@ def main():
         screen_flags = pygame.RESIZABLE
         screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT), screen_flags, vsync=1)
 
-    pygame.display.set_caption("FoVEkipE")
+    pygame.display.set_caption("RunFoVEyourLife")
     clock = pygame.time.Clock()
     gamepads = init_joysticks()
 

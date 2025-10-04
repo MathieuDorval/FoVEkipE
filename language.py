@@ -1,8 +1,8 @@
-#    ______   ______     __   __   ______     __  __     __     ______   ______    
-#   /\  ___\ /\  __ \   /\ \ / /  /\  ___\   /\ \/ /    /\ \   /\  == \ /\  ___\   
-#   \ \  __\ \ \ \/\ \  \ \ \'/   \ \  __\   \ \  _"-.  \ \ \  \ \  _-/ \ \  __\   
-#    \ \_\    \ \_____\  \ \__|    \ \_____\  \ \_\ \_\  \ \_\  \ \_\    \ \_____\ 
-#     \/_/     \/_____/   \/_/      \/_____/   \/_/\/_/   \/_/   \/_/     \/_____/ 
+#    ______     __  __     __   __     ______   ______     __   __   ______     __  __     ______     __  __     ______     __         __     ______   ______    
+#   /\  == \   /\ \/\ \   /\ "-.\ \   /\  ___\ /\  __ \   /\ \ / /  /\  ___\   /\ \_\ \   /\  __ \   /\ \/\ \   /\  == \   /\ \       /\ \   /\  ___\ /\  ___\   
+#   \ \  __<   \ \ \_\ \  \ \ \-.  \  \ \  __\ \ \ \/\ \  \ \ \'/   \ \  __\   \ \____ \  \ \ \/\ \  \ \ \_\ \  \ \  __<   \ \ \____  \ \ \  \ \  __\ \ \  __\   
+#    \ \_\ \_\  \ \_____\  \ \_\\"\_\  \ \_\    \ \_____\  \ \__|    \ \_____\  \/\_____\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_\  \ \_\    \ \_____\ 
+#     \/_/ /_/   \/_____/   \/_/ \/_/   \/_/     \/_____/   \/_/      \/_____/   \/_____/   \/_____/   \/_____/   \/_/ /_/   \/_____/   \/_/   \/_/     \/_____/
 #    __         ______     __   __     ______     __  __     ______     ______     ______    
 #   /\ \       /\  __ \   /\ "-.\ \   /\  ___\   /\ \/\ \   /\  __ \   /\  ___\   /\  ___\   
 #   \ \ \____  \ \  __ \  \ \ \-.  \  \ \ \__ \  \ \ \_\ \  \ \  __ \  \ \ \__ \  \ \  __\   
@@ -12,6 +12,8 @@
 #   -> Manages game languages
 
 TEXTS = {
+    'game_name': {'fr': 'FoVE qui Peut', 'en': 'Run FoVE your Life'},
+
     'player_label': {'fr': 'Joueur', 'en': 'Player'},
     'predators_label': {'fr': 'Prédateurs', 'en': 'Predators'},
     'preys_label': {'fr': 'Proies', 'en': 'Preys'},
@@ -20,6 +22,14 @@ TEXTS = {
     'error_min_1_predator': {'fr': 'Au moins un prédateur est requis !', 'en': 'At least one predator is required!'},
     'error_min_1_prey': {'fr': 'Au moins une proie est requise !', 'en': 'At least one prey is required!'},
     'error_vibration_mode': {'fr': 'Moins de joueurs que de manettes requis !', 'en': 'Fewer players than controllers required!'},
+    'p1_join_prompt': {'fr': 'Joueur 1 : pressez le joystick gauche (manette 1)', 'en': 'Player 1: press left joystick (controller 1)'},
+    'p2_join_prompt_1pad': {'fr': 'Joueur 2 : pressez le joystick droit (manette 1)', 'en': 'Player 2: press right joystick (controller 1)'},
+    'p2_join_prompt_2pads': {'fr': 'Joueur 2 : pressez le joystick gauche (manette 2)', 'en': 'Player 2: press left joystick (controller 2)'},
+    'p3_join_prompt_2pads': {'fr': 'Joueur 3 : pressez le joystick droit (manette 1)', 'en': 'Player 3: press right joystick (controller 1)'},
+    'p4_join_prompt_2pads': {'fr': 'Joueur 4 : pressez le joystick droit (manette 2)', 'en': 'Player 4: press right joystick (controller 2)'},
+    'p3_join_prompt_3plus_pads': {'fr': 'Joueur 3 : pressez le joystick gauche (manette 3)', 'en': 'Player 3: press left joystick (controller 3)'},
+    'p4_join_prompt_3pads': {'fr': 'Joueur 4 : pressez le joystick droit (manette 1)', 'en': 'Player 4: press right joystick (controller 1)'},
+    'p4_join_prompt_4pads': {'fr': 'Joueur 4 : pressez le joystick gauche (manette 4)', 'en': 'Player 4: press left joystick (controller 4)'},
 
     'settings_title': {'fr': 'Paramètres du jeu', 'en': 'Game Settings'},
     'language_label': {'fr': 'Langue', 'en': 'Language'},
