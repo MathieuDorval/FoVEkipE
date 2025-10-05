@@ -9,7 +9,7 @@
 #    \ \_____\  \ \_\ \_\  \ \_\\"\_\  \ \_____\  \ \_____\  \ \_\ \_\  \ \_____\  \ \_____\ 
 #     \/_____/   \/_/\/_/   \/_/ \/_/   \/_____/   \/_____/   \/_/\/_/   \/_____/   \/_____/
 #   (version 03/10)
-#   → Manages game languages
+#   → Gère les langues du jeu
 
 TEXTS = {
     'game_name': {'fr': 'FoVE qui Peut', 'en': 'Run FoVE your Life'},
@@ -30,7 +30,7 @@ TEXTS = {
     'p3_join_prompt_3plus_pads': {'fr': 'Joueur 3 : pressez le joystick gauche (manette 3)', 'en': 'Player 3: press left joystick (controller 3)'},
     'p4_join_prompt_3pads': {'fr': 'Joueur 4 : pressez le joystick droit (manette 1)', 'en': 'Player 4: press right joystick (controller 1)'},
     'p4_join_prompt_4pads': {'fr': 'Joueur 4 : pressez le joystick gauche (manette 4)', 'en': 'Player 4: press left joystick (controller 4)'},
-    # Settings menu
+    # Menu Paramètres
     'settings_title': {'fr': 'Paramètres du jeu', 'en': 'Game Settings'},
     'language_label': {'fr': 'Langue', 'en': 'Language'},
     'round_duration_label': {'fr': 'Durée de la manche', 'en': 'Round Duration'},
@@ -47,11 +47,11 @@ TEXTS = {
     'on_label': {'fr': 'Activé', 'en': 'On'},
     'off_label': {'fr': 'Désactivé', 'en': 'Off'},
     'settings_close_prompt': {'fr': 'Appuyez sur Select pour fermer', 'en': 'Press Select to close'},
-    # Pause menu
+    # Menu Pause
     'pause_title': {'fr': 'Pause', 'en': 'Pause'},
     'resume_label': {'fr': 'Reprendre', 'en': 'Resume'},
     'return_to_menu_label': {'fr': 'Retour au menu', 'en': 'Back to Menu'},
-    # Game over
+    # Fin de partie
     'equality_label': {'fr': 'Égalité', 'en': 'Equality'},
     'predators_win_label': {'fr': 'Les prédateurs gagnent !', 'en': 'Predators win!'},
     'predator_wins_label': {'fr': 'Le prédateur gagne !', 'en': 'Predator wins!'},
@@ -63,7 +63,7 @@ TEXTS = {
     'killcam_label': {'fr': 'Killcam', 'en': 'Killcam'},
     'catch_label': {'fr': 'Attrapé !', 'en': 'Catch!'},
     'escape_label': {'fr': 'Échappé !', 'en': 'Escape!'},
-    # Animals
+    # Animaux
     'Wolf': {'fr': 'Loup', 'en': 'Wolf'},
     'Deer': {'fr': 'Cerf', 'en': 'Deer'},
     'Giga Wolf': {'fr': 'Giga Loup', 'en': 'Giga Wolf'},
@@ -79,13 +79,18 @@ TEXTS = {
     'Panther': {'fr': 'Panthère', 'en': 'Panther'},
     'Goat': {'fr': 'Chèvre', 'en': 'Goat'},
     'Antelope': {'fr': 'Antilope', 'en': 'Antelope'},
+    'Rhinoceros': {'fr': 'Rhinocéros', 'en': 'Rhinoceros'},
+    'Ostrich': {'fr': 'Autruche', 'en': 'Ostrich'},
+    'Hyena': {'fr': 'Hyène', 'en': 'Hyena'},
+    'Dragon': {'fr': 'Dragon', 'en': 'Dragon'},
+    'Pegasus': {'fr': 'Pégase', 'en': 'Pegasus'},
 }
 
 CURRENT_LANGUAGE = 'fr'
 
 def set_language(lang):
     """
-    Sets the global language for the game.
+    Définit la langue globale du jeu.
     """
     global CURRENT_LANGUAGE
     if lang in ['fr', 'en']:
@@ -93,6 +98,7 @@ def set_language(lang):
 
 def get_text(key):
     """
-    Retrieves a text string in the currently selected language.
+    Récupère une chaîne de texte dans la langue actuellement sélectionnée.
     """
     return TEXTS.get(key, {}).get(CURRENT_LANGUAGE, key)
+

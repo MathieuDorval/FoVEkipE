@@ -8,11 +8,12 @@
 #   \ \ \-./\ \  \ \  __\   \ \ \-.  \  \ \ \_\ \  
 #    \ \_\ \ \_\  \ \_____\  \ \_\\"\_\  \ \_____\ 
 #     \/_/  \/_/   \/_____/   \/_/ \/_/   \/_____/ 
-#   (version 04/10)
-#   → Manage the main menu
+#   (version 08/10)
+#   → Gère le menu principal
 
 import pygame
 import settings
+import math
 from maps import generate_terrain
 from renderer import MapRenderer, draw_background
 from ui import draw_menu
@@ -22,7 +23,7 @@ from menu_settings import menu_settings_loop
 from language import get_text
 
 def _get_player_gamepad_map(num_gamepads):
-    """(Internal) Returns a dictionary mapping player IDs to their gamepad index."""
+    """(Interne) Retourne un dictionnaire mappant les ID des joueurs à leur index de manette."""
     if num_gamepads == 0: return {}
     if num_gamepads == 1: return {1: 0, 2: 0, 3: -1, 4: -1}
     if num_gamepads == 2: return {1: 0, 2: 1, 3: 0, 4: 1}
@@ -30,13 +31,14 @@ def _get_player_gamepad_map(num_gamepads):
     if num_gamepads >= 4: return {1: 0, 2: 1, 3: 2, 4: 3}
     return {}
 
-def menu_loop(screen, clock, gamepads, game_settings):
+def menu_loop(screen, clock, gamepads, game_settings, player_unlocked_all):
     """
-    Handle the main menu.
+    Gère le menu principal.
     """
     p_ready = {i: False for i in range(1, 5)}
     player_focus = {i: 1 for i in range(1, 5)}
     player_cursors = {i: game_settings.get(f'p{i}_animal_index', 0) for i in range(1, 5)}
+    player_hold_timers = {i: {'right': 0.0, 'left': 0.0} for i in range(1, 5)}
     last_inputs = {}
     map_rotation_angle = 0.0 
     role_error_message = ""
@@ -116,26 +118,54 @@ def menu_loop(screen, clock, gamepads, game_settings):
             nav_x, nav_y = menu_actions[f'p{i}_nav_x'], menu_actions[f'p{i}_nav_y']
             last_nav_x, last_nav_y = last_inputs.get(f'p{i}_nav_x', 0), last_inputs.get(f'p{i}_nav_y', 0)
             
-            if focus == 0:
+            num_selectable_animals = len(ANIMALS) if player_unlocked_all.get(i, False) else min(len(ANIMALS), settings.N_ANIMALS_TO_SELECT)
+
+            if focus == 0: # Navigation for role selection
                 if nav_y > 0 and last_nav_y == 0: player_focus[i] = 1
                 if nav_x != 0 and last_nav_x == 0:
-                    if nav_x > 0:
-                        game_settings[f'p{i}_role'] = 'prey'
-                    elif nav_x < 0:
-                        game_settings[f'p{i}_role'] = 'predator'
+                    game_settings[f'p{i}_role'] = 'prey' if nav_x > 0 else 'predator'
 
-            elif focus == 1:
-                if nav_y < 0 and last_nav_y == 0 and player_cursors[i] // 8 == 0: player_focus[i] = 0
+            elif focus == 1: # Navigation for animal selection
+                
+                # Unlock logic
+                is_on_last_animal = (player_cursors[i] == num_selectable_animals - 1)
+                if is_on_last_animal and nav_x == 1 and not player_unlocked_all[i]:
+                    player_hold_timers[i]['right'] += dt
+                    if player_hold_timers[i]['right'] >= 5.0:
+                        player_unlocked_all[i] = True
+                        player_hold_timers[i]['right'] = 0.0
                 else:
-                    icons_per_row = 8
+                    player_hold_timers[i]['right'] = 0.0
+
+                # Relock logic
+                is_on_first_animal = (player_cursors[i] == 0)
+                if is_on_first_animal and nav_x == -1 and player_unlocked_all[i]:
+                    player_hold_timers[i]['left'] += dt
+                    if player_hold_timers[i]['left'] >= 5.0:
+                        player_unlocked_all[i] = False
+                        player_hold_timers[i]['left'] = 0.0
+                else:
+                    player_hold_timers[i]['left'] = 0.0
+
+                # Cursor movement logic
+                num_rows = 2
+                icons_per_row = math.ceil(num_selectable_animals / num_rows)
+                if icons_per_row == 0: icons_per_row = 1
+                
+                if nav_y < 0 and last_nav_y == 0 and player_cursors[i] < icons_per_row: player_focus[i] = 0
+                else:
                     cursor = player_cursors[i]
                     if nav_y != 0 and last_nav_y == 0:
                         new_cursor = cursor + (nav_y * icons_per_row)
-                        if 0 <= new_cursor < len(ANIMALS): player_cursors[i] = new_cursor
+                        if 0 <= new_cursor < num_selectable_animals: player_cursors[i] = new_cursor
                     if nav_x != 0 and last_nav_x == 0:
                         row = cursor // icons_per_row
                         new_cursor = cursor + nav_x
-                        if 0 <= new_cursor < len(ANIMALS) and new_cursor // icons_per_row == row: player_cursors[i] = new_cursor
+                        if 0 <= new_cursor < num_selectable_animals and new_cursor // icons_per_row == row: player_cursors[i] = new_cursor
+                
+                # Ensure cursor is within bounds after list change
+                if player_cursors[i] >= num_selectable_animals:
+                    player_cursors[i] = num_selectable_animals - 1
 
             if is_new_confirm:
                 if is_human:
@@ -145,12 +175,13 @@ def menu_loop(screen, clock, gamepads, game_settings):
                         player_focus[i] = 0
                     elif focus == 0:
                         p_ready[i] = True
-                else:
+                else: # AI logic
                     if focus == 1:
                         game_settings[f'p{i}_animal_index'] = player_cursors[i]
                         game_settings[f'p{i}_animal_name'] = ANIMALS[player_cursors[i]]['name']
                         player_focus[i] = 0
                     elif focus == 0:
+                        # Auto-launch if only AIs are present and one confirms
                         human_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] == "PLAYER"]
                         current_active_players = [p for p in range(1, 5) if game_settings[f'p{p}_status'] != "INACTIVE"]
                         if not human_players and current_active_players and i == min(current_active_players):
@@ -192,7 +223,8 @@ def menu_loop(screen, clock, gamepads, game_settings):
             
         draw_background(screen)
         map_renderer.draw_map(map_rotation_angle, game_settings)
-        panel_rects = draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message, len(gamepads))
+        panel_rects = draw_menu(screen, game_settings, p_ready, player_focus, player_cursors, role_error_message, len(gamepads), player_unlocked_all)
         pygame.display.flip()
 
     return False, 0, {}
+

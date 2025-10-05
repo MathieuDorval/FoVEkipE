@@ -8,8 +8,8 @@
 #   \ \ \__ \  \ \  __ \  \ \ \-./\ \  \ \  __\   
 #    \ \_____\  \ \_\ \_\  \ \_\ \ \_\  \ \_____\ 
 #     \/_____/   \/_/\/_/   \/_/  \/_/   \/_____/
-#   (version 04/10)
-#   → Main game file
+#   (version 08/10)
+#   → Fichier principal du jeu
 
 import pygame
 import settings
@@ -25,7 +25,7 @@ from language import set_language
 
 def main():
     """
-    Initialize the game, manage the main loop (menu, game).
+    Initialise le jeu, gère la boucle principale (menu, jeu).
     """
     pygame.init()
     
@@ -35,7 +35,7 @@ def main():
         
         screen_index = settings.DISPLAY_SCREEN
         if screen_index < 0 or screen_index >= len(desktop_sizes):
-            print(f"Warning: Screen {screen_index} not available. Defaulting to screen 0.")
+            print(f"Avertissement : L'écran {screen_index} n'est pas disponible. Utilisation de l'écran 0 par défaut.")
             screen_index = 0
 
         if desktop_sizes:
@@ -79,9 +79,11 @@ def main():
     
     session_log = logs.init_session_log(len(gamepads))
     
+    player_unlocked_all = {i: False for i in range(1, 5)}
+
     running = True
     while running:
-        menu_result, map_rotation_angle, panel_rects = menu_loop(screen, clock, gamepads, game_settings)
+        menu_result, map_rotation_angle, panel_rects = menu_loop(screen, clock, gamepads, game_settings, player_unlocked_all)
 
         if not menu_result:
             running = False
@@ -108,7 +110,9 @@ def main():
         game_data = logs.add_game_to_log(session_log, game_settings, players)
         map_renderer = MapRenderer(screen, screen.get_rect(), surface_data, game_settings)
 
-        game_result = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle, panel_rects)
+        game_return_value = game_loop(screen, clock, players, map_renderer, game_data, gamepads, game_settings, map_rotation_angle, panel_rects)
+        game_result = game_return_value[0]
+        scores = game_return_value[1]
 
         if game_result == 'QUIT':
             running = False
@@ -120,3 +124,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
