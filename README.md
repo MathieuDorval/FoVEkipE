@@ -1,5 +1,19 @@
 # Run FoVE your Life - Controls Guide / Guide des Commandes
 
+## **Prerequisites**
+
+Before running the game, make sure you have installed the necessary Python libraries.
+
+- `pygame`
+- `numpy`
+- `scipy`
+- `perlin_noise`
+
+You can install them using pip :
+```bash
+pip install pygame numpy scipy perlin_noise
+```
+
 ## **How to Launch the Game**
 To start the game, run the `game.py` file using Python from your terminal:
 ```bash
